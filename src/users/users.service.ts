@@ -28,6 +28,9 @@ export class UsersService {
     }
 
     async updateUser(id:number, data: { email?: string; name?: string; password?: string }){
+        if (!data) {
+            throw new Error('Update data is required');
+        }
         let hashedPassword: string | undefined;
         if(data.password){
             hashedPassword = sha256(data.password);
