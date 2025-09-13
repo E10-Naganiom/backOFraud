@@ -1,5 +1,6 @@
 
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DbModule } from './db/db.module';
@@ -9,10 +10,20 @@ import { AuthModule } from './auth/auth.module';
 import { AdminModule } from './admin/admin.module';
 
 @Module({
-  imports: [DbModule, UsersModule, AdminModule, AuthModule, JwtModule.register({
-    global: true,
-    secret: process.env.JWT_SECRET   //"supersecret"
-  })],
+  imports: [
+    ConfigModule.forRoot({
+      envFilePath: '.env.local',
+      isGlobal: true,
+    }),
+    DbModule, 
+    UsersModule, 
+    AdminModule, 
+    AuthModule, 
+    JwtModule.register({
+      global: true,
+      secret: process.env.JWT_SECRET   //"supersecret"
+    })
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
