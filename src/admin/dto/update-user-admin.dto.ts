@@ -1,12 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export class UpdateUserAsAdminDto {
-  @ApiProperty({ required: false, description: 'Email del usuario' })
+  @ApiProperty({ example: 'nuevo@example.com', required: false, description: 'Nuevo Email del usuario (opcional)' })
   email?: string;
 
-  @ApiProperty({ required: false, description: 'Nombre del usuario' })
+  @ApiProperty({ example: 'Sara Gil', required: false, description: 'Nuevo Nombre del usuario (opcional)' })
   name?: string;
 
-  @ApiProperty({ required: false, description: 'Contraseña del usuario' })
+  @ApiProperty({ example: 'newPass123', required: false, description: 'Nueva contraseña en texto plano (opcional)' })
   password?: string;
 }

@@ -54,6 +54,7 @@ export class UsersRepository{
         if(updates.length === 0) return this.findById(id);
 
         const sql = `UPDATE users SET ${updates.join(', ')} WHERE id = ${id}`;
+        //console.log(sql);
         await this.db.getPool().query(sql);
         return this.findById(id);
     }

@@ -3,8 +3,21 @@ import { TokenService } from "./token.service";
 import { Body, Controller, Get, Post, Req, UseGuards } from "@nestjs/common";
 import { JwtAuthGuard } from "src/common/guards/jwt-auth.guard";
 import type { AuthenticatedRequest } from "src/common/interfaces/authenticated-request";
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiProperty, ApiResponse, ApiTags } from "@nestjs/swagger";
 
+class LoginDto {
+    @ApiProperty({ example: 'nuevo@example.com', required: true, description: 'Email del usuario' })
+    email: string;
+    @ApiProperty({ example: 'Pass123', required: true, description: 'Contraseña del usuario' })
+    password: string;
+}
 
+class RefreshDto {
+    @ApiProperty({ example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...', required: true, description: 'Refresh token' })
+    token: string;
+}
+
+@ApiTags('Módulo de Autenticación')
 @Controller('auth')
 export class AuthController {
     constructor(
@@ -12,6 +25,13 @@ export class AuthController {
         private readonly userService: UsersService
     ) {}
 
+    @ApiOperation({ summary: 'Endpoint para iniciar sesión y obtener tokens de acceso y refresh' })
+    @ApiBody({ type: LoginDto, examples: {
+        Ejemplo: {
+            value: { email: 'juan@example.com', password: 'Pass123' }
+    }}})
+    @ApiResponse({ status: 201, description: 'Login exitoso. Tokens generados correctamente.' })
+    @ApiResponse({ status: 401, description: 'Credenciales inválidas.' })
     @Post('login')
     async login(@Body() loginDto: { email: string; password: string }) {
         const user = await this.userService.validateUser(loginDto.email, loginDto.password);
@@ -23,6 +43,14 @@ export class AuthController {
         return { error: 'Invalid credentials' };
     }
 
+
+    @ApiOperation({ summary: 'Endpoint para refrescar el token de acceso usando un token de refresh' })
+    @ApiBody({ type: RefreshDto, examples: {
+        Ejemplo: {
+            value: { token: 'REFRESH_TOKEN' }
+    }}})
+    @ApiResponse({ status: 201, description: 'Token de acceso renovado correctamente.' })
+    @ApiResponse({ status: 401, description: 'Token de refresh inválido.' })
     @Post('refresh')
     async refresh(@Body() refreshDto: { token: string }) {
         const payload = await this.tokenService.verifyRefreshToken(refreshDto.token);
@@ -36,8 +64,12 @@ export class AuthController {
         return { error: 'Invalid refresh token' };
     }
 
+    @ApiOperation({ summary: 'Endpoint para obtener el perfil del usuario autenticado' })
     @Get('profile')
     @UseGuards(JwtAuthGuard)
+    @ApiBearerAuth()
+    @ApiResponse({ status: 200, description: 'User profile retrieved successfully.' })
+    @ApiResponse({ status: 401, description: 'El token es invalido o no se envio.' })
     getProfile(@Req() req: AuthenticatedRequest) {
         return {profile: req.user.profile};
     }
