@@ -8,6 +8,7 @@ import { UsersModule } from './users/users.module';
 import { JwtModule } from '@nestjs/jwt';
 import { AuthModule } from './auth/auth.module';
 import { AdminModule } from './admin/admin.module';
+import { IncidentsModule } from './incidents/incidents.module';
 
 @Module({
   imports: [
@@ -15,10 +16,11 @@ import { AdminModule } from './admin/admin.module';
       envFilePath: '.env.local',
       isGlobal: true,
     }),
-    DbModule, 
-    UsersModule, 
-    AdminModule, 
-    AuthModule, 
+    DbModule,
+    UsersModule,
+    AdminModule,
+    AuthModule,
+    IncidentsModule, 
     JwtModule.register({
       global: true,
       secret: process.env.JWT_SECRET   //"supersecret"
