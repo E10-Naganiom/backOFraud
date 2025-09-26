@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { UsersRepository } from './users.repository';
 import { sha256 } from '../util/hash/hash.util';
 
@@ -7,9 +7,19 @@ export class UsersService {
     constructor(private readonly usersRepository: UsersRepository) {}
     
     async createUser(email: string, name: string, password: string){
-        console.log("Aqui cifraremos la contraseña");
-        const hashed_password= sha256(password);
-        return this.usersRepository.createUser(email, name, hashed_password);
+        try {
+            console.log("Aqui cifraremos la contraseña");
+            const hashed_password= sha256(password);
+            return this.usersRepository.createUser(email, name, hashed_password);
+        }
+        catch (error) {
+            if (error.code === 'ER_DUP_ENTRY') {
+                // Lanzamos un error más entendible
+                throw new ConflictException('Ya existe una cuenta con este correo.');
+              }
+              console.error('Error inesperado en createUser:', error);
+              throw new InternalServerErrorException('Ocurrió un error inesperado al crear el usuario.');
+        }
     }
 
     async findById(id: number){
