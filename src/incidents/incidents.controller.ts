@@ -1,53 +1,33 @@
-import { Controller, Get, Post, Body, Param, Patch, Delete, UseGuards, ValidationPipe } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param } from '@nestjs/common';
 import { IncidentsService } from './incidents.service';
-import { CreateIncidentDto } from './dto/create-incident.dto';
-import { UpdateIncidentDto } from './dto/update-incident.dto';
-import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { Incident } from './incidents.repository';
 
 @Controller('incidents')
 export class IncidentsController {
-    constructor(private readonly incidentsService: IncidentsService) {}
+  constructor(private readonly incidentsService: IncidentsService) {}
 
-    @Post()
-    async create(@Body(ValidationPipe) createIncidentDto: CreateIncidentDto) {
-        return this.incidentsService.createIncident(createIncidentDto);
-    }
+  @Post()
+  create(@Body() data: Omit<Incident, 'id' | 'fecha_creacion' | 'fecha_actualizacion'>) {
+    return this.incidentsService.createIncident(data);
+  }
 
-    @Get()
-    async findAll() {
-        return this.incidentsService.findAll();
-    }
+  @Get()
+  findAll() {
+    return this.incidentsService.findAll();
+  }
 
-    @Get('approved')
-    async findApproved() {
-        return this.incidentsService.findApproved();
-    }
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.incidentsService.findById(Number(id));
+  }
 
-    @Get('category/:id_categoria')
-    async findByCategory(@Param('id_categoria') id_categoria: string) {
-        return this.incidentsService.findByCategory(+id_categoria);
-    }
+  @Put(':id')
+  update(@Param('id') id: string, @Body() data: Partial<Incident>) {
+    return this.incidentsService.updateIncident(Number(id), data);
+  }
 
-    @Get('user/:id_usuario')
-    @UseGuards(JwtAuthGuard)
-    async findByUser(@Param('id_usuario') id_usuario: string) {
-        return this.incidentsService.findByUser(+id_usuario);
-    }
-
-    @Get(':id')
-    async findOne(@Param('id') id: string) {
-        return this.incidentsService.findById(+id);
-    }
-
-    @Patch(':id')
-    @UseGuards(JwtAuthGuard)
-    async update(@Param('id') id: string, @Body(ValidationPipe) updateIncidentDto: UpdateIncidentDto) {
-        return this.incidentsService.updateIncident(+id, updateIncidentDto);
-    }
-
-    @Delete(':id')
-    @UseGuards(JwtAuthGuard)
-    async remove(@Param('id') id: string) {
-        return this.incidentsService.deleteIncident(+id);
-    }
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.incidentsService.deleteIncident(Number(id));
+  }
 }

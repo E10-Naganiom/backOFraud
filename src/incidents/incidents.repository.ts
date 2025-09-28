@@ -1,152 +1,73 @@
-import { Injectable } from "@nestjs/common";
-import { DbService } from "../db/db.service";
+import { Injectable } from '@nestjs/common';
+import { DbService } from '../db/db.service';
 
-export type Incidente = {
-    id: number;
-    titulo: string;
-    id_categoria: number;
-    nombre_atacante?: string;
-    telefono?: string;
-    correo?: string;
-    user?: string;
-    red_social?: string;
-    descripcion?: string;
-    fecha_incidente?: Date;
-    fecha_creacion: Date;
-    fecha_actualizado: Date;
-    id_usuario?: number;
-    superviser?: number;
-    id_status: number;
-    is_anonym: boolean;
-};
+export interface Incident {
+  id: number;
+  titulo: string;
+  id_categoria: number;
+  nombre_atacante?: string;
+  telefono?: string;
+  correo?: string;
+  user_red?: string;
+  red_social?: string;
+  descripcion: string;
+  fecha_incidente: string;
+  fecha_creacion?: string;
+  fecha_actualizacion?: string;
+  id_usuario: number;
+  supervisor?: number;
+  id_estatus: number;
+  es_anonimo: boolean;
+}
 
 @Injectable()
 export class IncidentsRepository {
-    constructor(private readonly db: DbService) {}
+  constructor(private readonly db: DbService) {}
 
-    async createIncident(data: {
-        titulo: string;
-        id_categoria: number;
-        nombre_atacante?: string;
-        telefono?: string;
-        correo?: string;
-        user?: string;
-        red_social?: string;
-        descripcion?: string;
-        fecha_incidente?: Date;
-        id_usuario?: number;
-        id_status: number;
-        is_anonym: boolean;
-    }): Promise<Incidente | null> {
-        const fields = ['titulo', 'id_categoria', 'id_status', 'is_anonym', 'fecha_creacion', 'fecha_actualizado'];
-        const values = [`'${data.titulo}'`, `${data.id_categoria}`, `${data.id_status}`, `${data.is_anonym ? 1 : 0}`, 'NOW()', 'NOW()'];
+  async createIncident(data: Omit<Incident, 'id' | 'fecha_creacion' | 'fecha_actualizacion'>): Promise<Incident | null> {
+    const sql = `
+      INSERT INTO incidente (
+        titulo, id_categoria, nombre_atacante, telefono, correo,
+        user_red, red_social, descripcion, fecha_incidente,
+        id_usuario, supervisor, id_estatus, es_anonimo
+      ) VALUES (
+        '${data.titulo}', ${data.id_categoria}, ${data.nombre_atacante ? `'${data.nombre_atacante}'` : null},
+        ${data.telefono ? `'${data.telefono}'` : null}, ${data.correo ? `'${data.correo}'` : null},
+        ${data.user_red ? `'${data.user_red}'` : null}, ${data.red_social ? `'${data.red_social}'` : null},
+        '${data.descripcion}', '${data.fecha_incidente}', ${data.id_usuario},
+        ${data.supervisor ?? null}, ${data.id_estatus}, ${data.es_anonimo ? 1 : 0}
+      )
+    `;
+    const [result]: any = await this.db.getPool().query(sql);
 
-        if (data.nombre_atacante) {
-            fields.push('nombre_atacante');
-            values.push(`'${data.nombre_atacante}'`);
-        }
-        if (data.telefono) {
-            fields.push('telefono');
-            values.push(`'${data.telefono}'`);
-        }
-        if (data.correo) {
-            fields.push('correo');
-            values.push(`'${data.correo}'`);
-        }
-        if (data.user) {
-            fields.push('user');
-            values.push(`'${data.user}'`);
-        }
-        if (data.red_social) {
-            fields.push('red_social');
-            values.push(`'${data.red_social}'`);
-        }
-        if (data.descripcion) {
-            fields.push('descripcion');
-            values.push(`'${data.descripcion}'`);
-        }
-        if (data.fecha_incidente) {
-            fields.push('fecha_incidente');
-            values.push(`'${data.fecha_incidente.toISOString().split('T')[0]}'`);
-        }
-        if (data.id_usuario) {
-            fields.push('id_usuario');
-            values.push(`${data.id_usuario}`);
-        }
+    return {
+      id: result.insertId,
+      ...data,
+    };
+  }
 
-        const sql = `INSERT INTO incidente (${fields.join(', ')}) VALUES (${values.join(', ')})`;
-        const [result] = await this.db.getPool().query(sql);
-        const insertId = (result as any).insertId;
+  async findAll(): Promise<Incident[]> {
+    const sql = `SELECT * FROM incidente`;
+    const [rows]: any = await this.db.getPool().query(sql);
+    return rows;
+  }
 
-        return this.findById(insertId);
-    }
+  async findById(id: number): Promise<Incident | null> {
+    const sql = `SELECT * FROM incidente WHERE id = ${id}`;
+    const [rows]: any = await this.db.getPool().query(sql);
+    return rows[0] || null;
+  }
 
-    async findById(id: number): Promise<Incidente | null> {
-        const sql = `SELECT * FROM incidente WHERE id = ${id} LIMIT 1`;
-        const [rows] = await this.db.getPool().query(sql);
-        const result = rows as Incidente[];
-        return result[0] || null;
-    }
+  async updateIncident(id: number, data: Partial<Incident>): Promise<void> {
+    const updates = Object.entries(data)
+      .map(([key, value]) => `${key} = ${value === null || value === undefined ? 'NULL' : `'${value}'`}`)
+      .join(', ');
+    const sql = `UPDATE incidente SET ${updates} WHERE id = ${id}`;
+    await this.db.getPool().query(sql);
+  }
 
-    async findAll(): Promise<Incidente[]> {
-        const sql = `SELECT * FROM incidente ORDER BY fecha_creacion DESC`;
-        const [rows] = await this.db.getPool().query(sql);
-        return rows as Incidente[];
-    }
-
-    async findByCategory(id_categoria: number): Promise<Incidente[]> {
-        const sql = `SELECT * FROM incidente WHERE id_categoria = ${id_categoria} ORDER BY fecha_creacion DESC`;
-        const [rows] = await this.db.getPool().query(sql);
-        return rows as Incidente[];
-    }
-
-    async findByUser(id_usuario: number): Promise<Incidente[]> {
-        const sql = `SELECT * FROM incidente WHERE id_usuario = ${id_usuario} ORDER BY fecha_creacion DESC`;
-        const [rows] = await this.db.getPool().query(sql);
-        return rows as Incidente[];
-    }
-
-    async findApproved(): Promise<Incidente[]> {
-        const sql = `SELECT * FROM incidente WHERE id_status = 2 ORDER BY fecha_creacion DESC`;
-        const [rows] = await this.db.getPool().query(sql);
-        return rows as Incidente[];
-    }
-
-    async updateIncident(id: number, data: {
-        titulo?: string;
-        id_categoria?: number;
-        nombre_atacante?: string;
-        telefono?: string;
-        correo?: string;
-        user?: string;
-        red_social?: string;
-        descripcion?: string;
-        fecha_incidente?: Date;
-        superviser?: number;
-        id_status?: number;
-    }): Promise<Incidente | null> {
-        const updates: string[] = ['fecha_actualizado = NOW()'];
-
-        if (data.titulo) updates.push(`titulo = '${data.titulo}'`);
-        if (data.id_categoria) updates.push(`id_categoria = ${data.id_categoria}`);
-        if (data.nombre_atacante !== undefined) updates.push(`nombre_atacante = ${data.nombre_atacante ? `'${data.nombre_atacante}'` : 'NULL'}`);
-        if (data.telefono !== undefined) updates.push(`telefono = ${data.telefono ? `'${data.telefono}'` : 'NULL'}`);
-        if (data.correo !== undefined) updates.push(`correo = ${data.correo ? `'${data.correo}'` : 'NULL'}`);
-        if (data.user !== undefined) updates.push(`user = ${data.user ? `'${data.user}'` : 'NULL'}`);
-        if (data.red_social !== undefined) updates.push(`red_social = ${data.red_social ? `'${data.red_social}'` : 'NULL'}`);
-        if (data.descripcion !== undefined) updates.push(`descripcion = ${data.descripcion ? `'${data.descripcion}'` : 'NULL'}`);
-        if (data.fecha_incidente) updates.push(`fecha_incidente = '${data.fecha_incidente.toISOString().split('T')[0]}'`);
-        if (data.superviser !== undefined) updates.push(`superviser = ${data.superviser ? data.superviser : 'NULL'}`);
-        if (data.id_status) updates.push(`id_status = ${data.id_status}`);
-
-        const sql = `UPDATE incidente SET ${updates.join(', ')} WHERE id = ${id}`;
-        await this.db.getPool().query(sql);
-        return this.findById(id);
-    }
-
-    async deleteIncident(id: number): Promise<boolean> {
-        const sql = `DELETE FROM incidente WHERE id = ${id}`;
-        const [result] = await this.db.getPool().query(sql);
-        return (result as any).affectedRows > 0;
-    }
+  async deleteIncident(id: number): Promise<void> {
+    const sql = `DELETE FROM incidente WHERE id = ${id}`;
+    await this.db.getPool().query(sql);
+  }
 }

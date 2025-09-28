@@ -2,24 +2,10 @@ import { Controller, Post } from "@nestjs/common";
 import { Body, Get, Param, Put } from "@nestjs/common/decorators";
 import { UsersService } from "./users.service";
 import { ApiBody, ApiOperation, ApiProperty, ApiPropertyOptional, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { IsBoolean, IsEmail, IsOptional, IsString } from "class-validator";
+import { CreateUserDto } from "./dto/create-user-dto";
+import { UpdateUserDto } from "./dto/update-user-dto";
 
-export class CreateUserDto {
-    @ApiProperty({ example: 'juan@example', description: 'Correo unico para el usuario', required: true})
-    email: string;
-    @ApiProperty({ example: 'Juan Perez', description: 'Nombre del usuario', required: true})
-    name: string;
-    @ApiProperty({ example: 'password123', description: 'Contraseña en texto plano', required: true})
-    password: string;
-};
-
-export class UpdateUserDto  {
-    @ApiPropertyOptional({ example: 'juana@example', description: 'Nuevo correo (opcional)', required: false})
-    email?:string;
-    @ApiPropertyOptional({ example: 'Juana Lopez', description: 'Nuevo nombre (opcional)', required: false})
-    name?:string;
-    @ApiPropertyOptional({ example: 'password123', description: 'Nueva contraseña en texto plano (opcional)', required: false})
-    password?:string;
-}
 
 @ApiTags('Modulo de Usuarios')
 @Controller('users')
@@ -31,7 +17,7 @@ export class UsersController{
     @ApiResponse({status: 402, description: 'Error en los datos proporcionados'})
     @Post()
     async createUser(@Body() creayeUserDto:CreateUserDto){
-        return this.usersService.createUser(creayeUserDto.email, creayeUserDto.name, creayeUserDto.password);
+        return this.usersService.createUser(creayeUserDto.email, creayeUserDto.name, creayeUserDto.apellido, creayeUserDto.password);
     }
 
     @ApiOperation({summary: "Endpoint para actualizar usuarios por su ID"})
