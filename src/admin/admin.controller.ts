@@ -1,12 +1,13 @@
 import { Controller, Put, Body, Param, Get, NotFoundException } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
+import { IncidentsService } from '../incidents/incidents.service';
 import { ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UpdateUserAsAdminDto } from './dto/update-user-admin.dto';
 
 @ApiTags('Modulo de Administración')
 @Controller('admin')
 export class AdminController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(private readonly usersService: UsersService, private readonly incidentsService: IncidentsService) {}
 
   @ApiOperation({summary: "Endpoint para listar todos los usuarios"})
   @ApiResponse({status: 200, description: 'Lista de usuarios obtenida exitosamente'})
@@ -42,5 +43,45 @@ export class AdminController {
       const user = await this.usersService.findById(userId);
       if (!user) throw new NotFoundException('No se encontró el usuario con un ID: ' + id);
       return user;
+  }
+
+  @ApiOperation({ summary: 'Obtener todos los incidentes' })
+  @ApiResponse({ status: 200, description: 'Lista de incidentes obtenida exitosamente.' })
+  @ApiResponse({ status: 500, description: 'Error del servidor.' })
+  @Get('incidents/list')
+  async findAll() {
+    return this.incidentsService.findAllIncidents();
+  }
+
+  @ApiOperation({ summary: 'Obtener un incidente en base a su ID' })
+  @ApiResponse({ status: 200, description: 'Incidente obtenido exitosamente.' })
+  @ApiResponse({ status: 404, description: 'Incidente no encontrado.' })
+  @Get('incidents/:id')
+  async findOneIncident(@Param('id') id: string) {
+    return this.incidentsService.findIncidentById(Number(id));
+  }
+
+  @ApiOperation({ summary: 'Obtener los incidentes aprobados' })
+  @ApiResponse({ status: 200, description: 'Lista de incidentes aprobados obtenida exitosamente.' })
+  @ApiResponse({ status: 500, description: 'Error del servidor.' })
+  @Get('incidents/list/approved')
+  async findApprovedIncidents() {
+    return this.incidentsService.findAllIncidents().then(incidents => incidents.filter(incident => incident.id_estatus === 2));
+  }
+
+  @ApiOperation({ summary: 'Obtener los incidentes pendientes' })
+  @ApiResponse({ status: 200, description: 'Lista de incidentes pendientes obtenida exitosamente.' })
+  @ApiResponse({ status: 500, description: 'Error del servidor.' })
+  @Get('incidents/list/pending')
+  async findPendingIncidents() {
+    return this.incidentsService.findAllIncidents().then(incidents => incidents.filter(incident => incident.id_estatus === 1));
+  }
+
+  @ApiOperation({ summary: 'Obtener los incidentes rechazados' })
+  @ApiResponse({ status: 200, description: 'Lista de incidentes rechazados obtenida exitosamente.' })
+  @ApiResponse({ status: 500, description: 'Error del servidor.' })
+  @Get('incidents/list/rejected')
+  async findRejectedIncidents() {
+    return this.incidentsService.findAllIncidents().then(incidents => incidents.filter(incident => incident.id_estatus === 3));
   }
 }

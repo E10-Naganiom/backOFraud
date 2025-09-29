@@ -25,7 +25,7 @@ export class UpdateIncidentDto {
         @ApiProperty({ example: '@alexnachovc', description: 'Medio de contacto por red social', required: false })
         @IsString()
         @IsOptional()
-        user?: string;
+        user_red?: string;
         @ApiProperty({ example: 'Instagram', description: 'Plataforma social de contacto', required: false })
         @IsString()
         @IsOptional()
@@ -34,18 +34,6 @@ export class UpdateIncidentDto {
         @IsString()
         @IsOptional()
         descripcion?: string;
-        @ApiProperty({ example: '28-09-2025', description: 'Fecha en la que ocurrió el incidente', required: true })
-        @IsDateString()
-        @IsOptional()
-        fecha_incidente?: Date;
-        @ApiProperty({ example: '28-09-2025', description: 'Fecha de levantamiento del reporte', required: true })
-        @IsDateString()
-        @IsOptional()
-        fecha_creacion?: Date;
-        @ApiProperty({ example: '28-09-2025', description: 'Fecha de actualizacion del reporte', required: true })
-        @IsDateString()
-        @IsOptional()
-        fecha_actualizacion?: Date;
         @ApiProperty({ example: 1, description: 'ID del usuario que reporta el incidente', required: true })
         @IsNumber()
         @IsOptional()
@@ -57,9 +45,9 @@ export class UpdateIncidentDto {
         @ApiProperty({ example: 1, description: 'ID del estado del incidente', required: true })
         @IsNumber()
         @IsOptional()
-        id_status?: number;
+        id_estatus?: number;
         @ApiProperty({ example: true, description: 'Indica si el reporte es anónimo', required: true })
         @IsBoolean()
         @IsOptional()
-        is_anonym?: boolean;
+        es_anonimo?: boolean;
 }
