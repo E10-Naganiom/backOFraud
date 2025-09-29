@@ -16,9 +16,9 @@ export type User = {
 export class UsersRepository{
     constructor(private readonly db: DbService){}
 
-    async createUser(email:string, name:string, apellido:string, password:string, is_admin: boolean, is_active: boolean): Promise<User | null>{
+    async createUser(email:string, name:string, apellido:string, password:string, salt:string, is_admin: boolean, is_active: boolean): Promise<User | null>{
         const sql= `INSERT INTO usuario (email, nombre, apellido, contrasena, salt, es_admin, es_activo) 
-        VALUES ('${email}', '${name}', '${apellido}', '${password}', 'mysalt', ${is_admin}, ${is_active})`;
+        VALUES ('${email}', '${name}', '${apellido}', '${password}', '${salt}', ${is_admin}, ${is_active})`;
         await this.db.getPool().query(sql);
         return {
             id: 1,

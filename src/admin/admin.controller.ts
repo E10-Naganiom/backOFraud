@@ -1,4 +1,4 @@
-import { Controller, Put, Body, Param, Get, NotFoundException } from '@nestjs/common';
+import { Controller, Put, Body, Param, Get, NotFoundException, Patch } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { IncidentsService } from '../incidents/incidents.service';
 import { ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -84,4 +84,26 @@ export class AdminController {
   async findRejectedIncidents() {
     return this.incidentsService.findAllIncidents().then(incidents => incidents.filter(incident => incident.id_estatus === 3));
   }
+
+  @ApiOperation({ summary: 'Evaluar incidentes' })
+  @ApiResponse({ status: 200, description: 'Incidente evaluado exitosamente.' })
+  @ApiResponse({ status: 400, description: 'Datos inválidos.' })
+  @ApiBody({ schema: { type: 'object', properties: { id_estatus: { type: 'number', example: 2 }, supervisor: { type: 'number', example: 1 } } } })
+  @Patch('incidents/:id/evaluate')
+  async evaluateIncident(@Param('id') id: string, @Body() body: { id_estatus: number; supervisor?: number }) {
+    const incident = await this.incidentsService.findIncidentById(Number(id));
+    if (!incident) {
+      throw new NotFoundException('No se encontró el incidente con un ID: ' + id);
+    }
+    return this.incidentsService.updateIncident(Number(id), { id_estatus: body.id_estatus, supervisor: body.supervisor ?? incident.supervisor });
+  }
+
+  @ApiOperation({ summary: 'Inactivar un usuario por su ID' })
+  @ApiResponse({ status: 200, description: 'Usuario inactivado exitosamente' })
+  @ApiResponse({ status: 403, description: 'Usuario no encontrado' })
+  @Patch('user/:id/inactivate')
+  async inactivateUser(@Param('id') id: number) {
+      return this.usersService.inactivateUser(Number(id));
+  }
+
 }

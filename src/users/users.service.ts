@@ -1,6 +1,6 @@
 import { ConflictException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { UsersRepository } from './users.repository';
-import { sha256 } from '../util/hash/hash.util';
+import { generateSalt, sha256WithSalt } from '../util/hash/hash.util';
 
 @Injectable()
 export class UsersService {
@@ -8,13 +8,14 @@ export class UsersService {
     
     async createUser(email: string, name: string, apellido: string, password: string, is_admin?: boolean, is_active?: boolean) {
         try {
-            console.log("Aqui cifraremos la contraseña. Tambien, el salt.");
-            const hashed_password= sha256(password);
-            return this.usersRepository.createUser(email, name, apellido, hashed_password, is_admin?? false, is_active?? true);
+            console.log("Aqui cifraremos la contraseña. Tambien, el salt. Ya");
+            const salt = generateSalt();
+            console.log("Salt generado: " + salt);
+            const hashed_password= sha256WithSalt(password, salt);
+            return this.usersRepository.createUser(email, name, apellido, hashed_password, salt, is_admin?? false, is_active?? true);
         }
         catch (error) {
             if (error.code === 'ER_DUP_ENTRY') {
-                // Lanzamos un error más entendible
                 throw new ConflictException('Ya existe una cuenta con este correo.');
               }
               console.error('Error inesperado en createUser:', error);
@@ -32,8 +33,8 @@ export class UsersService {
         console.log(user);
         console.log("Password : " + password);
         console.log("Password Hash : " + user.contrasena);
-        console.log("Hashed Password : " + sha256(password));
-        const isValid = user.contrasena === sha256(password);
+        console.log("Hashed Password : " + sha256WithSalt(password, user.salt));
+        const isValid = user.contrasena === sha256WithSalt(password, user.salt);
         return isValid ? user : null;
     }
 
@@ -43,7 +44,7 @@ export class UsersService {
         }
         let hashedPassword: string | undefined;
         if(data.password){
-            hashedPassword = sha256(data.password);
+            hashedPassword = sha256WithSalt(data.password, generateSalt());
         }
         return this.usersRepository.updateUser(id, {
             email: data.email,
@@ -57,6 +58,14 @@ export class UsersService {
 
     async getAllUsers() {
         return this.usersRepository.findAllUsers();
+    }
+
+    async inactivateUser(id: number) {
+        const user = await this.usersRepository.findById(id);
+        if (!user) {
+            throw new Error('User not found');
+        }
+        return this.usersRepository.updateUser(id, { is_active: false });
     }
 
 }
