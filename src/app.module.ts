@@ -9,6 +9,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { AuthModule } from './auth/auth.module';
 import { AdminModule } from './admin/admin.module';
 import { IncidentsModule } from './incidents/incidents.module';
+import { FileModule } from './files/file.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { IncidentsModule } from './incidents/incidents.module';
       envFilePath: '.env.local',
       isGlobal: true,
     }),
+    FileModule,
     DbModule,
     UsersModule,
     AdminModule,
