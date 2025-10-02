@@ -33,6 +33,24 @@ export class CategoriesController {
     return this.categoriesService.findCategoryById(id);
   }
 
+  @ApiOperation({ summary: 'Obtener el nivel del riesgo de una categoría' })
+  @ApiResponse({ status: 200, description: 'Nivel de riesgo obtenido exitosamente.' })
+  @ApiResponse({ status: 404, description: 'Categoría no encontrada.' })
+  @ApiParam({ name: 'id', description: 'ID de la categoría', type: Number })
+  @Get(':id/risk-level')
+  async getRiskLevelByCategoryId(@Param('id', ParseIntPipe) id: number) {
+    return this.categoriesService.getRiskLevelByCategoryId(id);
+  }
+
+  @ApiOperation({ summary: 'Obtener numero de reportes por categoria' })
+  @ApiResponse({ status: 200, description: 'Número de reportes obtenidos exitosamente.' })
+  @ApiResponse({ status: 404, description: 'Categoría no encontrada.' })
+  @ApiParam({ name: 'id', description: 'ID de la categoría', type: Number })
+  @Get(':id/report-count')
+  async getReportCountByCategoryId(@Param('id', ParseIntPipe) id: number) {
+    return this.categoriesService.getReportCountByCategoryId(id);
+  }
+
   @ApiOperation({ summary: 'Obtener categorías por nivel de riesgo' })
   @ApiResponse({ status: 200, description: 'Categorías filtradas por riesgo.' })
   @ApiResponse({ status: 400, description: 'Nivel de riesgo inválido.' })

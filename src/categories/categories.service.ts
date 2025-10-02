@@ -91,4 +91,19 @@ export class CategoriesService {
       throw error;
     }
   }
+
+  async getRiskLevelByCategoryId(id: number): Promise<string> {
+    const category_id_riesgo = (await this.findCategoryById(id)).id_riesgo
+    try {
+      return await this.categoriesRepo.getRiskLevelByCategoryId(category_id_riesgo);
+    } catch (error) {
+      console.error('Error inesperado en getRiskLevelByCategoryId:', error);
+      throw error;
+    }
+  }
+
+  async getReportCountByCategoryId(id: number): Promise<number> {
+    await this.findCategoryById(id);
+    return this.categoriesRepo.getReportCountByCategoryId(id);
+  }
 }

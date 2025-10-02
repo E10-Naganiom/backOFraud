@@ -193,4 +193,20 @@ export class CategoriesRepository {
     const sql = `DELETE FROM categoria WHERE id = ?`;
     await this.db.getPool().query(sql, [id]);
   }
+
+  async getRiskLevelByCategoryId(id_riesgo: number): Promise<string> {
+    const sql = `
+      select r.descripcion from categoria c left join riesgo r on c.id_riesgo=r.id where c.id_riesgo=?;`;
+    const [rows]: any = await this.db.getPool().query(sql, [id_riesgo]);
+    if (rows.length === 0) {
+      throw new Error('No se encontró el nivel de riesgo para la categoría proporcionada');
+    }
+    return rows[0].descripcion;
+  }
+
+  async getReportCountByCategoryId(id: number): Promise<number> {
+    const sql = `SELECT COUNT(*) as count FROM incidente WHERE id_categoria = ?`;
+    const [rows]: any = await this.db.getPool().query(sql, [id]);
+    return rows[0].count || 0;
+  }
 }
