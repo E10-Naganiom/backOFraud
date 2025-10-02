@@ -1,4 +1,6 @@
-import { IsString, IsNumber, IsOptional, IsEmail, IsDateString, IsBoolean } from 'class-validator';
+/* eslint-disable prettier/prettier */
+
+import { IsString, IsNumber, IsOptional, IsEmail, IsDateString, IsBoolean, IsArray } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class UpdateIncidentDto {
@@ -50,4 +52,9 @@ export class UpdateIncidentDto {
         @IsBoolean()
         @IsOptional()
         es_anonimo?: boolean;
+        @ApiProperty({ description: 'IDs de evidencias a eliminar', type: [Number],example: [1, 2, 3] })
+        @IsOptional()
+        @IsArray()
+        @IsNumber({}, { each: true })
+        evidencias_a_eliminar?: number[];
 }
