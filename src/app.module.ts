@@ -1,4 +1,6 @@
 
+/* eslint-disable prettier/prettier */
+
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
@@ -9,7 +11,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { AuthModule } from './auth/auth.module';
 import { AdminModule } from './admin/admin.module';
 import { IncidentsModule } from './incidents/incidents.module';
-import { FileModule } from './files/file.module';
+import { FilesModule } from './files/file.module';
 import { CategoriesController } from './categories/categories.controller';
 import { CategoriesModule } from './categories/categories.module';
 
@@ -19,7 +21,7 @@ import { CategoriesModule } from './categories/categories.module';
       envFilePath: '.env.local',
       isGlobal: true,
     }),
-    FileModule,
+    FilesModule,
     DbModule,
     UsersModule,
     AdminModule,

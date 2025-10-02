@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Injectable } from '@nestjs/common';
 import { DbService } from '../db/db.service';
 
@@ -23,24 +24,44 @@ export interface Incident {
 export class IncidentsRepository {
   constructor(private readonly db: DbService) {}
 
-  async createIncident(titulo: string, id_categoria: number, descripcion: string, id_usuario: number, es_anonimo: boolean, supervisor?: number, nombre_atacante?: string, telefono?: string, correo?: string, user_red?: string, red_social?: string ): Promise<Incident | null> {
+  async createIncident(
+    titulo: string,
+    id_categoria: number,
+    descripcion: string,
+    id_usuario: number,
+    es_anonimo: boolean,
+    supervisor?: number,
+    nombre_atacante?: string,
+    telefono?: string,
+    correo?: string,
+    user_red?: string,
+    red_social?: string
+  ): Promise<Incident> {
     const sql = `
       INSERT INTO incidente (
         titulo, id_categoria, nombre_atacante, telefono, correo,
         user_red, red_social, descripcion,
         id_usuario, supervisor, id_estatus, es_anonimo
-      ) VALUES (
-        '${titulo}', ${id_categoria}, ${nombre_atacante ? `'${nombre_atacante}'` : null},
-        ${telefono ? `'${telefono}'` : null}, ${correo ? `'${correo}'` : null},
-        ${user_red ? `'${user_red}'` : null}, ${red_social ? `'${red_social}'` : null},
-        '${descripcion}', ${id_usuario},
-        ${supervisor ?? null}, 1, ${es_anonimo ? 1 : 0}
-      )
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
     `;
-    await this.db.getPool().query(sql);
 
+    const [result]: any = await this.db.getPool().query(sql, [
+      titulo,
+      id_categoria,
+      nombre_atacante || null,
+      telefono || null,
+      correo || null,
+      user_red || null,
+      red_social || null,
+      descripcion,
+      id_usuario,
+      supervisor || null,
+      es_anonimo ? 1 : 0
+    ]);
+
+    // Retornar el incidente creado con el ID real
     return {
-      id: 1,
+      id: result.insertId,
       titulo,
       id_categoria,
       nombre_atacante,
@@ -65,21 +86,38 @@ export class IncidentsRepository {
   }
 
   async findIncidentById(id: number): Promise<Incident | null> {
-    const sql = `SELECT * FROM incidente WHERE id = ${id}`;
-    const [rows]: any = await this.db.getPool().query(sql);
+    const sql = `SELECT * FROM incidente WHERE id = ?`;
+    const [rows]: any = await this.db.getPool().query(sql, [id]);
     return rows[0] || null;
   }
 
   async updateIncident(id: number, data: Partial<Incident>): Promise<void> {
-    const updates = Object.entries(data)
-      .map(([key, value]) => `${key} = ${value === null || value === undefined ? 'NULL' : `'${value}'`}`)
-      .join(', ');
-    const sql = `UPDATE incidente SET ${updates} WHERE id = ${id}`;
-    await this.db.getPool().query(sql);
+    const allowedFields = [
+      'titulo', 'id_categoria', 'nombre_atacante', 'telefono', 'correo',
+      'user_red', 'red_social', 'descripcion', 'supervisor', 'id_estatus'
+    ];
+
+    const updates: string[] = [];
+    const values: any[] = [];
+
+    Object.entries(data).forEach(([key, value]) => {
+      if (allowedFields.includes(key)) {
+        updates.push(`${key} = ?`);
+        values.push(value === undefined ? null : value);
+      }
+    });
+
+    if (updates.length === 0) {
+      throw new Error('No valid fields to update');
+    }
+
+    values.push(id);
+    const sql = `UPDATE incidente SET ${updates.join(', ')} WHERE id = ?`;
+    await this.db.getPool().query(sql, values);
   }
 
   async deleteIncident(id: number): Promise<void> {
-    const sql = `DELETE FROM incidente WHERE id = ${id}`;
-    await this.db.getPool().query(sql);
+    const sql = `DELETE FROM incidente WHERE id = ?`;
+    await this.db.getPool().query(sql, [id]);
   }
 }
