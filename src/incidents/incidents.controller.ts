@@ -171,4 +171,12 @@ export class IncidentsController {
   async deleteIncident(@Param('id') id: number) {
     return this.incidentsService.updateIncident(Number(id), { id_estatus: 3 });
   }
+
+  @ApiOperation({ summary: 'Obtener los incidentes de cierto usuario en base a su ID' })
+  @ApiResponse({ status: 200, description: 'Lista de incidentes del usuario obtenida exitosamente.' })
+  @ApiResponse({ status: 404, description: 'Usuario no encontrado.' })
+  @Get('user/:id')
+  async findIncidentsByUserId(@Param('id') id: number) {
+    return this.incidentsService.findIncidentsByUserId(Number(id));
+  }
 }

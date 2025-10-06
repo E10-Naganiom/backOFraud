@@ -120,4 +120,10 @@ export class IncidentsRepository {
     const sql = `DELETE FROM incidente WHERE id = ?`;
     await this.db.getPool().query(sql, [id]);
   }
+
+  async findIncidentsByUserId(id_usuario: number): Promise<Incident[]> {
+    const sql = `SELECT * FROM incidente WHERE id_usuario = ?`;
+    const [rows]: any = await this.db.getPool().query(sql, [id_usuario]);
+    return rows as Incident[];
+  }
 }

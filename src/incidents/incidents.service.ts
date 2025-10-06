@@ -161,8 +161,25 @@ export class IncidentsService {
       throw error;
     }
   }
-
-  deleteIncident(id: number) {
-    return this.incidentsRepo.deleteIncident(id);
+  async findIncidentsByUserId(userId: number) {
+    // Verificar que el usuario tiene incidentes
+    const incidents = await this.incidentsRepo.findIncidentsByUserId(userId);
+    if (!incidents || incidents.length === 0) {
+      throw new NotFoundException(`No se encontraron incidentes para el usuario con ID ${userId}`);
+    }
+    // Obtener evidencias para cada incidente
+    const incidentsWithEvidences = await Promise.all(
+      incidents.map(async (incident) => {
+        const evidences = await this.evidenceService.findEvidencesByIncidentId(incident.id);
+        return {
+          ...incident,
+          evidencias: evidences
+        };
+      })
+    );
+    return incidentsWithEvidences.map(incident => ({
+      ...incident,
+      es_anonimo: Boolean(incident.es_anonimo)
+    }));
   }
 }
