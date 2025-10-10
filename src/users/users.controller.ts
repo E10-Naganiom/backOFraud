@@ -1,8 +1,9 @@
+/* eslint-disable prettier/prettier */
 import { Controller, Post } from "@nestjs/common";
 import { Body, Get, Param, Put, Patch } from "@nestjs/common/decorators";
 import { UsersService } from "./users.service";
-import { ApiBody, ApiOperation, ApiProperty, ApiPropertyOptional, ApiResponse, ApiTags } from "@nestjs/swagger";
-import { IsBoolean, IsEmail, IsOptional, IsString } from "class-validator";
+import { Public } from "src/common/decorators/public.decorator"; // ← NUEVO
+import { ApiBody, ApiOperation, ApiPropertyOptional, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { CreateUserDto } from "./dto/create-user-dto";
 import { UpdateUserDto } from "./dto/update-user-dto";
 
@@ -12,12 +13,13 @@ import { UpdateUserDto } from "./dto/update-user-dto";
 export class UsersController{
     constructor(private readonly usersService:UsersService){}
 
+    @Public() // ← NUEVO: Endpoint público (sin autenticación)
     @ApiOperation({summary: "Endpoint para registro de usuarios"})
     @ApiResponse({status: 202, description: 'Usuario creado exitosamente'})
     @ApiResponse({status: 402, description: 'Error en los datos proporcionados'})
     @Post()
-    async createUser(@Body() creayeUserDto:CreateUserDto){
-        return this.usersService.createUser(creayeUserDto.email, creayeUserDto.name, creayeUserDto.apellido, creayeUserDto.password);
+    async createUser(@Body() createUserDto:CreateUserDto){
+        return this.usersService.createUser(createUserDto.email, createUserDto.name, createUserDto.apellido, createUserDto.password);
     }
 
     @ApiOperation({summary: "Endpoint para actualizar usuarios por su ID"})

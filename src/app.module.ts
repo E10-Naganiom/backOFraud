@@ -1,39 +1,36 @@
-
 /* eslint-disable prettier/prettier */
-
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { DbModule } from './db/db.module';
-import { UsersModule } from './users/users.module';
-import { JwtModule } from '@nestjs/jwt';
+import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { AuthModule } from './auth/auth.module';
-import { AdminModule } from './admin/admin.module';
+import { UsersModule } from './users/users.module';
 import { IncidentsModule } from './incidents/incidents.module';
-import { FilesModule } from './files/file.module';
-import { CategoriesController } from './categories/categories.controller';
 import { CategoriesModule } from './categories/categories.module';
+import { AdminModule } from './admin/admin.module';
+import { DbModule } from './db/db.module';
+import { EvidenceModule } from './evidences/evidence.module';
+import { FilesModule } from './files/file.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      envFilePath: '.env.local',
-      isGlobal: true,
-    }),
-    FilesModule,
     DbModule,
-    UsersModule,
-    AdminModule,
     AuthModule,
-    IncidentsModule, 
+    UsersModule,
+    IncidentsModule,
     CategoriesModule,
-    JwtModule.register({
-      global: true,
-      secret: process.env.JWT_SECRET   //"supersecret"
-    })
+    AdminModule,
+    EvidenceModule,
+    FilesModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard, // ← Guard aplicado globalmente a TODOS los endpoints
+    },
+  ],
 })
 export class AppModule {}
