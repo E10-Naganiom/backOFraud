@@ -182,4 +182,12 @@ export class IncidentsService {
       es_anonimo: Boolean(incident.es_anonimo)
     }));
   }
+
+  async getIncidentStatus(id: number) {
+    return this.incidentsRepo.getIncidentStatus(id);
+  }
+
+  async getIncidentUsername(id: number) {
+    return this.incidentsRepo.getIncidentUsername(id); 
+  }
 }

@@ -1,6 +1,7 @@
 /* eslint-disable prettier/prettier */
 import { Injectable } from '@nestjs/common';
 import { DbService } from '../db/db.service';
+import e from 'express';
 
 export interface Incident {
   id: number;
@@ -125,5 +126,22 @@ export class IncidentsRepository {
     const sql = `SELECT * FROM incidente WHERE id_usuario = ?`;
     const [rows]: any = await this.db.getPool().query(sql, [id_usuario]);
     return rows as Incident[];
+  }
+
+  async getIncidentStatus(id: number): Promise<{ estatus: String } | null> {
+    const sql = `SELECT descripcion FROM estatus WHERE id = ?`;
+    const [rows]: any = await this.db.getPool().query(sql, [id]);
+    return rows[0] || null;
+  }
+
+  async getIncidentUsername(id: number): Promise<{ nombreCompleto: string } | null> {
+    const sql = `SELECT nombre,apellido FROM usuario WHERE id = ?`;
+    const [rows]: any = await this.db.getPool().query(sql, [id]);
+    if (rows[0]) {
+      return { nombreCompleto: rows[0].nombre + ' ' + rows[0].apellido };
+    }
+    else {
+      return null;
+    }
   }
 }
