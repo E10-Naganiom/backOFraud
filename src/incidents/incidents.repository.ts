@@ -167,14 +167,21 @@ export class IncidentsRepository {
     const totalCategorias = totalCategoriasResult[0].total;
   
     // Incidentes por estatus
-    const [porEstatus]: any = await pool.query(
-      'SELECT e.descripcion AS estatus, COUNT(i.id) AS total FROM estatus e LEFT JOIN incidente i ON e.id = i.id_estatus GROUP BY e.id, e.descripcion ORDER BY e.id'
-    );
+    const [porEstatus]: any = await pool.query(`
+      SELECT e.descripcion AS estatus, COUNT(i.id) AS total 
+      FROM estatus e 
+      LEFT JOIN incidente i ON e.id = i.id_estatus 
+      GROUP BY e.id, e.descripcion 
+      ORDER BY e.id
+    `);
   
     // Incidentes por categoría
-    const [porCategoria]: any = await pool.query(
-      'SELECT c.titulo, COUNT(i.id_categoria) AS total FROM categoria c left join incidente i on c.id = i.id_categoria GROUP BY c.id;'
-    );
+    const [porCategoria]: any = await pool.query(`
+      SELECT c.titulo, COUNT(i.id_categoria) AS total 
+      FROM categoria c 
+      LEFT JOIN incidente i ON c.id = i.id_categoria 
+      GROUP BY c.id
+    `);
   
     // Métodos de contacto
     const [metodosContactoResult]: any = await pool.query(`
@@ -193,36 +200,38 @@ export class IncidentsRepository {
       WHERE red_social IS NOT NULL AND red_social != ''
       GROUP BY red_social
     `);
-
+  
+    // 🔹 Función para redondear sin perder el tipo numérico
+    const round2 = (n: number) => Math.round(n * 100) / 100;
+  
+    // --- Cálculos con porcentajes numéricos ---
     const porEstatusConPorcentaje = porEstatus.map((e: any) => ({
       ...e,
-      porcentaje: totalIncidentes > 0 ? (e.total / totalIncidentes * 100).toFixed(2) : 0
+      porcentaje: totalIncidentes > 0 ? round2((e.total / totalIncidentes) * 100) : 0,
     }));
-
+  
     const porCategoriaConPorcentaje = porCategoria.map((c: any) => ({
       ...c,
-      porcentaje: totalIncidentes > 0 ? (c.total / totalIncidentes * 100).toFixed(2) : 0,
+      porcentaje: totalIncidentes > 0 ? round2((c.total / totalIncidentes) * 100) : 0,
     }));
-
+  
     const metodosContactoConPorcentaje = Object.entries(metodosContacto).map(
       ([key, value]: [string, any]) => ({
         metodo: key,
         total: Number(value),
-        porcentaje: totalIncidentes > 0 ? (Number(value) / totalIncidentes * 100).toFixed(2) : 0,
+        porcentaje: totalIncidentes > 0 ? round2((Number(value) / totalIncidentes) * 100) : 0,
       })
     );
-
+  
     const totalConRedSocial = redesSociales.reduce(
       (acc: number, r: any) => acc + r.total,
       0
     );
-
+  
     const redesSocialesConPorcentaje = redesSociales.map((r: any) => ({
       ...r,
       porcentaje:
-        totalConRedSocial > 0
-          ? ((r.total / totalConRedSocial) * 100).toFixed(2)
-          : 0,
+        totalConRedSocial > 0 ? round2((r.total / totalConRedSocial) * 100) : 0,
     }));
   
     // 🧠 Estructura final del resultado
@@ -232,8 +241,9 @@ export class IncidentsRepository {
       por_estatus: porEstatusConPorcentaje,
       por_categoria: porCategoriaConPorcentaje,
       metodos_contacto: metodosContactoConPorcentaje,
-      redes_sociales: redesSocialesConPorcentaje
+      redes_sociales: redesSocialesConPorcentaje,
     };
   }
+  
   
 }

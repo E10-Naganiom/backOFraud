@@ -204,9 +204,22 @@ export class CategoriesRepository {
     return rows[0] || null;
   }
 
-  async getReportCountByCategoryId(id: number): Promise<number> {
-    const sql = `select c.id, c.titulo, count(i.id_categoria) as count from categoria c join incidente i on c.id = i.id_categoria where c.id= ? group by c.id;`;
+  async getReportCountByCategoryId(id: number): Promise<{ id: number, titulo: string, count: number }> {
+    const sql = `
+        SELECT c.id, c.titulo, COUNT(i.id_categoria) AS count
+        FROM categoria c
+        LEFT JOIN incidente i ON c.id = i.id_categoria
+        WHERE c.id = ?
+        GROUP BY c.id;
+    `;
+
     const [rows]: any = await this.db.getPool().query(sql, [id]);
-    return rows[0] || 0;
-  }
+    if (rows.length === 0) {
+        // Si no hay incidentes, devolvemos count=0 igualmente
+        const [cat]: any = await this.db.getPool().query(`SELECT id, titulo FROM categoria WHERE id = ?`, [id]);
+        return { id: cat[0].id, titulo: cat[0].titulo, count: 0 };
+    }
+
+    return rows[0];
+}
 }
