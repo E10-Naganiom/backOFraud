@@ -195,4 +195,20 @@ export class IncidentsController {
   async getIncidentUsername(@Param('id') id: number) {
     return this.incidentsService.getIncidentUsername(Number(id));
   }
+
+  @ApiOperation({ summary: 'Obtener los incidentes más recientes (últimos 5)' })
+  @ApiResponse({ status: 200, description: 'Lista de incidentes recientes obtenida exitosamente.' })
+  @ApiResponse({ status: 404, description: 'No se encontraron incidentes recientes.' })
+  @Get('recent/incidents')
+  async findRecentIncidents() {
+    return this.incidentsService.findRecentIncidents();
+  }
+
+  @ApiOperation({ summary: 'Endpoint para obtener estadisticas de incidentes' })
+  @ApiResponse({ status: 200, description: 'Estadisticas obtenidas exitosamente.' })
+  @ApiResponse({ status: 404, description: 'No se encontraron datos para las estadisticas.' })
+  @Get('statistics/summary')
+  async getIncidentStatistics() {
+    return this.incidentsService.getIncidentStatistics();
+  }
 }
