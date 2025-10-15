@@ -25,7 +25,7 @@ export class CreateIncidentDto {
     @ApiProperty({ example: '@alexnachovc', description: 'Medio de contacto por red social', required: false })
     @IsString()
     @IsOptional()
-    user?: string;
+    user_red?: string;
     @ApiProperty({ example: 'Instagram', description: 'Plataforma social de contacto', required: false })
     @IsString()
     @IsOptional()

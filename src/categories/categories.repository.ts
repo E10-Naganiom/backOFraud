@@ -201,12 +201,25 @@ export class CategoriesRepository {
     if (rows.length === 0) {
       throw new Error('No se encontró el nivel de riesgo para la categoría proporcionada');
     }
-    return rows[0].descripcion;
+    return rows[0] || null;
   }
 
-  async getReportCountByCategoryId(id: number): Promise<number> {
-    const sql = `SELECT COUNT(*) as count FROM incidente WHERE id_categoria = ?`;
+  async getReportCountByCategoryId(id: number): Promise<{ id: number, titulo: string, count: number }> {
+    const sql = `
+        SELECT c.id, c.titulo, COUNT(i.id_categoria) AS count
+        FROM categoria c
+        LEFT JOIN incidente i ON c.id = i.id_categoria
+        WHERE c.id = ?
+        GROUP BY c.id;
+    `;
+
     const [rows]: any = await this.db.getPool().query(sql, [id]);
-    return rows[0].count || 0;
-  }
+    if (rows.length === 0) {
+        // Si no hay incidentes, devolvemos count=0 igualmente
+        const [cat]: any = await this.db.getPool().query(`SELECT id, titulo FROM categoria WHERE id = ?`, [id]);
+        return { id: cat[0].id, titulo: cat[0].titulo, count: 0 };
+    }
+
+    return rows[0];
+}
 }

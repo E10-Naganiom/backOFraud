@@ -102,7 +102,7 @@ export class CategoriesService {
     }
   }
 
-  async getReportCountByCategoryId(id: number): Promise<number> {
+  async getReportCountByCategoryId(id: number): Promise<{ id: number, titulo: string, count: number }> {
     await this.findCategoryById(id);
     return this.categoriesRepo.getReportCountByCategoryId(id);
   }

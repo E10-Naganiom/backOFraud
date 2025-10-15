@@ -244,4 +244,38 @@ export class IncidentsService {
       es_anonimo: Boolean(incident.es_anonimo)
     }));
   }
+
+  async getIncidentStatus(id: number) {
+    return this.incidentsRepo.getIncidentStatus(id);
+  }
+
+  async getIncidentUsername(id: number) {
+    return this.incidentsRepo.getIncidentUsername(id); 
+  }
+
+  async findRecentIncidents() {
+    const incidents = await this.incidentsRepo.findRecentIncidents();
+    if (!incidents || incidents.length === 0) {
+      throw new NotFoundException('No se encontraron incidentes recientes');
+    }
+    // Obtener evidencias para cada incidente
+    const incidentsWithEvidences = await Promise.all(
+      incidents.map(async (incident) => {
+        const evidences = await this.evidenceService.findEvidencesByIncidentId(incident.id);
+        return {
+          ...incident,
+          evidencias: evidences
+        };
+      })
+    );
+    return incidentsWithEvidences.map(incident => ({
+      ...incident,
+      es_anonimo: Boolean(incident.es_anonimo)
+    }));
+  }
+
+  async getIncidentStatistics() {
+    return this.incidentsRepo.getIncidentStatistics();
+  }
+
 }
