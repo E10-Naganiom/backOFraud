@@ -19,14 +19,18 @@ import {
   ApiOperation, 
   ApiResponse, 
   ApiTags,
-  ApiConsumes 
+  ApiConsumes,
+  ApiBearerAuth
 } from '@nestjs/swagger';
 import { CreateIncidentDto } from './dto/create-incident.dto';
 import { UpdateIncidentDto } from './dto/update-incident.dto';
+import { CurrentUser } from 'src/common/decorators/current-user.decorator';
+import type { UserProfile } from 'src/auth/token.service';
 import { diskStorage } from 'multer';
 import { join } from 'path';
 
 @ApiTags('Modulo de Incidentes')
+@ApiBearerAuth() // ← Indica en Swagger que todos los endpoints requieren Bearer token
 @Controller('incidents')
 export class IncidentsController {
   constructor(private readonly incidentsService: IncidentsService) {}
@@ -34,6 +38,7 @@ export class IncidentsController {
   @ApiOperation({ summary: 'Crear un nuevo incidente con evidencias (máximo 5 archivos)' })
   @ApiResponse({ status: 201, description: 'Incidente creado exitosamente.' })
   @ApiResponse({ status: 400, description: 'Datos inválidos o error en archivos.' })
+  @ApiResponse({ status: 401, description: 'No autenticado.' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
@@ -47,7 +52,6 @@ export class IncidentsController {
         user_red: { type: 'string', example: '@usuario123' },
         red_social: { type: 'string', example: 'Instagram' },
         descripcion: { type: 'string', example: 'Descripción del incidente' },
-        id_usuario: { type: 'number', example: 1 },
         supervisor: { type: 'number', example: 2 },
         es_anonimo: { type: 'boolean', example: false },
         files: {
@@ -58,7 +62,7 @@ export class IncidentsController {
           }
         }
       },
-      required: ['titulo', 'id_categoria', 'descripcion', 'id_usuario', 'es_anonimo']
+      required: ['titulo', 'id_categoria', 'descripcion', 'es_anonimo']
     }
   })
   @Post()
@@ -74,14 +78,20 @@ export class IncidentsController {
     })
   }))
   async createIncident(
+    @CurrentUser() user: UserProfile, // ← NUEVO: Usuario del token
     @Body() createIncidentDto: CreateIncidentDto,
     @UploadedFiles() files?: Express.Multer.File[]
   ) {
-    return this.incidentsService.createIncident(createIncidentDto, files);
+    return this.incidentsService.createIncident(
+      user.id, // ← ID del usuario autenticado
+      createIncidentDto, 
+      files
+    );
   }
 
   @ApiOperation({ summary: 'Obtener todos los incidentes con sus evidencias' })
   @ApiResponse({ status: 200, description: 'Lista de incidentes obtenida exitosamente.' })
+  @ApiResponse({ status: 401, description: 'No autenticado.' })
   @Get()
   async findAllIncidents() {
     return this.incidentsService.findAllIncidents();
@@ -89,10 +99,15 @@ export class IncidentsController {
 
   @ApiOperation({ summary: 'Obtener un incidente en base a su ID con sus evidencias' })
   @ApiResponse({ status: 200, description: 'Incidente obtenido exitosamente.' })
+  @ApiResponse({ status: 403, description: 'No tienes permiso para ver este incidente.' })
   @ApiResponse({ status: 404, description: 'Incidente no encontrado.' })
+  @ApiResponse({ status: 401, description: 'No autenticado.' })
   @Get(':id')
-  async findOneIncident(@Param('id') id: string) {
-    return this.incidentsService.findIncidentById(Number(id));
+  async findOneIncident(
+    @CurrentUser() user: UserProfile, // ← NUEVO: Validar que sea su incidente
+    @Param('id') id: string
+  ) {
+    return this.incidentsService.findIncidentById(Number(id), user.id);
   }
 
   @ApiOperation({ 
@@ -100,7 +115,9 @@ export class IncidentsController {
   })
   @ApiResponse({ status: 200, description: 'Incidente actualizado exitosamente.' })
   @ApiResponse({ status: 400, description: 'Datos inválidos.' })
+  @ApiResponse({ status: 403, description: 'No tienes permiso para editar este incidente.' })
   @ApiResponse({ status: 404, description: 'Incidente no encontrado.' })
+  @ApiResponse({ status: 401, description: 'No autenticado.' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
@@ -144,6 +161,7 @@ export class IncidentsController {
     })
   }))
   async updateIncident(
+    @CurrentUser() user: UserProfile, // ← NUEVO: Validar que sea su incidente
     @Param('id') id: string,
     @Body() updateIncidentDto: UpdateIncidentDto,
     @UploadedFiles() files?: Express.Multer.File[]
@@ -158,6 +176,7 @@ export class IncidentsController {
 
     return this.incidentsService.updateIncident(
       Number(id),
+      user.id, // ← ID del usuario autenticado
       data,
       files,
       idsToDelete
@@ -166,15 +185,21 @@ export class IncidentsController {
 
   @ApiOperation({ summary: 'Eliminar un incidente (soft delete - cambio a estatus 3)' })
   @ApiResponse({ status: 200, description: 'Incidente eliminado exitosamente.' })
+  @ApiResponse({ status: 403, description: 'No tienes permiso para eliminar este incidente.' })
   @ApiResponse({ status: 404, description: 'Incidente no encontrado.' })
+  @ApiResponse({ status: 401, description: 'No autenticado.' })
   @Patch(':id/delete')
-  async deleteIncident(@Param('id') id: number) {
-    return this.incidentsService.updateIncident(Number(id), { id_estatus: 3 });
+  async deleteIncident(
+    @CurrentUser() user: UserProfile, // ← NUEVO: Validar que sea su incidente
+    @Param('id') id: number
+  ) {
+    return this.incidentsService.deleteIncident(Number(id), user.id);
   }
 
   @ApiOperation({ summary: 'Obtener los incidentes de cierto usuario en base a su ID' })
   @ApiResponse({ status: 200, description: 'Lista de incidentes del usuario obtenida exitosamente.' })
   @ApiResponse({ status: 404, description: 'Usuario no encontrado.' })
+  @ApiResponse({ status: 401, description: 'No autenticado.' })
   @Get('user/:id')
   async findIncidentsByUserId(@Param('id') id: number) {
     return this.incidentsService.findIncidentsByUserId(Number(id));

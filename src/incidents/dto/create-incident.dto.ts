@@ -33,9 +33,6 @@ export class CreateIncidentDto {
     @ApiProperty({ example: 'El incidente ocurrió cuando...', description: 'Descripción detallada del incidente', required: true })
     @IsString()
     descripcion: string;
-    @ApiProperty({ example: 1, description: 'ID del usuario que reporta el incidente', required: true })
-    @IsNumber()
-    id_usuario: number;
     @ApiProperty({ example: 1, description: 'ID del supervisor asignado al incidente si es que ya se evaluó', required: false })
     @IsNumber()
     @IsOptional()
