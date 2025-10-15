@@ -25,12 +25,12 @@ import {
 import { CreateIncidentDto } from './dto/create-incident.dto';
 import { UpdateIncidentDto } from './dto/update-incident.dto';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
-import type { UserProfile } from 'src/auth/token.service';
+import * as tokenService from 'src/auth/token.service';
 import { diskStorage } from 'multer';
 import { join } from 'path';
 
 @ApiTags('Modulo de Incidentes')
-@ApiBearerAuth() // ← Indica en Swagger que todos los endpoints requieren Bearer token
+@ApiBearerAuth()
 @Controller('incidents')
 export class IncidentsController {
   constructor(private readonly incidentsService: IncidentsService) {}
@@ -78,12 +78,12 @@ export class IncidentsController {
     })
   }))
   async createIncident(
-    @CurrentUser() user: UserProfile, // ← NUEVO: Usuario del token
+    @CurrentUser() user: tokenService.UserProfile,
     @Body() createIncidentDto: CreateIncidentDto,
     @UploadedFiles() files?: Express.Multer.File[]
   ) {
     return this.incidentsService.createIncident(
-      user.id, // ← ID del usuario autenticado
+      user.id,
       createIncidentDto, 
       files
     );
@@ -97,6 +97,43 @@ export class IncidentsController {
     return this.incidentsService.findAllIncidents();
   }
 
+  // ========================================================================
+  // RUTAS ESPECÍFICAS - DEBEN IR ANTES DE :id
+  // ========================================================================
+
+  @ApiOperation({ summary: 'Obtener los incidentes más recientes del usuario autenticado (últimos 5)' })
+  @ApiResponse({ status: 200, description: 'Lista de incidentes recientes obtenida exitosamente.' })
+  @ApiResponse({ status: 404, description: 'No se encontraron incidentes recientes.' })
+  @ApiResponse({ status: 401, description: 'No autenticado.' })
+  @Get('recent/incidents')
+  async findRecentIncidents(
+    @CurrentUser() user: tokenService.UserProfile
+  ) {
+    return this.incidentsService.findRecentIncidents(user.id);
+  }
+
+  @ApiOperation({ summary: 'Obtener estadísticas globales de incidentes' })
+  @ApiResponse({ status: 200, description: 'Estadísticas obtenidas exitosamente.' })
+  @ApiResponse({ status: 404, description: 'No se encontraron datos para las estadísticas.' })
+  @ApiResponse({ status: 401, description: 'No autenticado.' })
+  @Get('statistics/summary')
+  async getIncidentStatistics() {
+    return this.incidentsService.getIncidentStatistics();
+  }
+
+  @ApiOperation({ summary: 'Obtener los incidentes de cierto usuario en base a su ID' })
+  @ApiResponse({ status: 200, description: 'Lista de incidentes del usuario obtenida exitosamente.' })
+  @ApiResponse({ status: 404, description: 'Usuario no encontrado.' })
+  @ApiResponse({ status: 401, description: 'No autenticado.' })
+  @Get('user/:id')
+  async findIncidentsByUserId(@Param('id') id: number) {
+    return this.incidentsService.findIncidentsByUserId(Number(id));
+  }
+
+  // ========================================================================
+  // RUTAS CON :id - DEBEN IR AL FINAL
+  // ========================================================================
+
   @ApiOperation({ summary: 'Obtener un incidente en base a su ID con sus evidencias' })
   @ApiResponse({ status: 200, description: 'Incidente obtenido exitosamente.' })
   @ApiResponse({ status: 403, description: 'No tienes permiso para ver este incidente.' })
@@ -104,10 +141,36 @@ export class IncidentsController {
   @ApiResponse({ status: 401, description: 'No autenticado.' })
   @Get(':id')
   async findOneIncident(
-    @CurrentUser() user: UserProfile, // ← NUEVO: Validar que sea su incidente
+    @CurrentUser() user: tokenService.UserProfile,
     @Param('id') id: string
   ) {
     return this.incidentsService.findIncidentById(Number(id), user.id);
+  }
+
+  @ApiOperation({ summary: 'Obtener estatus de un incidente dado su ID' })
+  @ApiResponse({ status: 200, description: 'Estatus del incidente obtenido exitosamente.' })
+  @ApiResponse({ status: 403, description: 'No tienes permiso para ver este incidente.' })
+  @ApiResponse({ status: 404, description: 'Incidente no encontrado.' })
+  @ApiResponse({ status: 401, description: 'No autenticado.' })
+  @Get(':id/status')
+  async getIncidentStatus(
+    @CurrentUser() user: tokenService.UserProfile,
+    @Param('id') id: number
+  ) {
+    return this.incidentsService.getIncidentStatus(Number(id), user.id);
+  }
+
+  @ApiOperation({ summary: 'Obtener el nombre de usuario asociado a un incidente en base a su ID' })
+  @ApiResponse({ status: 200, description: 'Nombre de usuario obtenido exitosamente.' })
+  @ApiResponse({ status: 403, description: 'No tienes permiso para ver este incidente.' })
+  @ApiResponse({ status: 404, description: 'Incidente no encontrado.' })
+  @ApiResponse({ status: 401, description: 'No autenticado.' })
+  @Get(':id/username')
+  async getIncidentUsername(
+    @CurrentUser() user: tokenService.UserProfile,
+    @Param('id') id: number
+  ) {
+    return this.incidentsService.getIncidentUsername(Number(id), user.id);
   }
 
   @ApiOperation({ 
@@ -161,14 +224,13 @@ export class IncidentsController {
     })
   }))
   async updateIncident(
-    @CurrentUser() user: UserProfile, // ← NUEVO: Validar que sea su incidente
+    @CurrentUser() user: tokenService.UserProfile,
     @Param('id') id: string,
     @Body() updateIncidentDto: UpdateIncidentDto,
     @UploadedFiles() files?: Express.Multer.File[]
   ) {
     const { evidencias_a_eliminar, ...data } = updateIncidentDto;
     
-    // Convertir string de IDs a array de números si viene como string
     let idsToDelete: number[] | undefined;
     if (evidencias_a_eliminar) {
       idsToDelete = evidencias_a_eliminar;
@@ -176,7 +238,7 @@ export class IncidentsController {
 
     return this.incidentsService.updateIncident(
       Number(id),
-      user.id, // ← ID del usuario autenticado
+      user.id,
       data,
       files,
       idsToDelete
@@ -190,50 +252,9 @@ export class IncidentsController {
   @ApiResponse({ status: 401, description: 'No autenticado.' })
   @Patch(':id/delete')
   async deleteIncident(
-    @CurrentUser() user: UserProfile, // ← NUEVO: Validar que sea su incidente
+    @CurrentUser() user: tokenService.UserProfile,
     @Param('id') id: number
   ) {
     return this.incidentsService.deleteIncident(Number(id), user.id);
-  }
-
-  @ApiOperation({ summary: 'Obtener los incidentes de cierto usuario en base a su ID' })
-  @ApiResponse({ status: 200, description: 'Lista de incidentes del usuario obtenida exitosamente.' })
-  @ApiResponse({ status: 404, description: 'Usuario no encontrado.' })
-  @ApiResponse({ status: 401, description: 'No autenticado.' })
-  @Get('user/:id')
-  async findIncidentsByUserId(@Param('id') id: number) {
-    return this.incidentsService.findIncidentsByUserId(Number(id));
-  }
-
-  @ApiOperation({ summary: 'Obtener estatus de un incidente dado su ID' })
-  @ApiResponse({ status: 200, description: 'Estatus del incidente obtenido exitosamente.' })
-  @ApiResponse({ status: 404, description: 'Incidente no encontrado.' })
-  @Get(':id/status')
-  async getIncidentStatus(@Param('id') id: number) {
-    return this.incidentsService.getIncidentStatus(Number(id));
-  }
-
-  @ApiOperation({ summary: 'Obtener el nombre de usuario asociado a un incidente en base a su ID' })
-  @ApiResponse({ status: 200, description: 'Nombre de usuario obtenido exitosamente.' })
-  @ApiResponse({ status: 404, description: 'Incidente no encontrado.' })
-  @Get(':id/username')
-  async getIncidentUsername(@Param('id') id: number) {
-    return this.incidentsService.getIncidentUsername(Number(id));
-  }
-
-  @ApiOperation({ summary: 'Obtener los incidentes más recientes (últimos 5)' })
-  @ApiResponse({ status: 200, description: 'Lista de incidentes recientes obtenida exitosamente.' })
-  @ApiResponse({ status: 404, description: 'No se encontraron incidentes recientes.' })
-  @Get('recent/incidents')
-  async findRecentIncidents() {
-    return this.incidentsService.findRecentIncidents();
-  }
-
-  @ApiOperation({ summary: 'Endpoint para obtener estadisticas de incidentes' })
-  @ApiResponse({ status: 200, description: 'Estadisticas obtenidas exitosamente.' })
-  @ApiResponse({ status: 404, description: 'No se encontraron datos para las estadisticas.' })
-  @Get('statistics/summary')
-  async getIncidentStatistics() {
-    return this.incidentsService.getIncidentStatistics();
   }
 }

@@ -245,22 +245,97 @@ export class IncidentsService {
     }));
   }
 
-  async getIncidentStatus(id: number) {
-    return this.incidentsRepo.getIncidentStatus(id);
+  /**
+   * Obtener el estatus de un incidente con validación de permisos
+   * @param incidentId - ID del incidente
+   * @param userId - ID del usuario autenticado
+   */
+  async getIncidentStatus(incidentId: number, userId: number) {
+    // 1. Verificar que el incidente existe
+    const incident = await this.incidentsRepo.findIncidentById(incidentId);
+    
+    if (!incident) {
+      throw new NotFoundException(`Incidente con ID ${incidentId} no encontrado`);
+    }
+
+    // 2. ✅ VALIDACIÓN: Solo el dueño puede ver el estatus de su incidente
+    if (incident.id_usuario !== userId) {
+      throw new ForbiddenException('No tienes permiso para ver el estatus de este incidente');
+    }
+
+    // 3. Obtener el estatus desde la tabla estatus usando el id_estatus del incidente
+    const estatusInfo = await this.incidentsRepo.getIncidentStatus(incident.id_estatus);
+    
+    if (!estatusInfo) {
+      throw new NotFoundException(`Estatus no encontrado para el incidente`);
+    }
+
+    return {
+      id_incidente: incident.id,
+      id_estatus: incident.id_estatus,
+      estatus: estatusInfo.estatus,
+      titulo: incident.titulo
+    };
   }
 
-  async getIncidentUsername(id: number) {
-    return this.incidentsRepo.getIncidentUsername(id); 
+  /**
+   * Obtener el nombre de usuario asociado a un incidente con validación de permisos
+   * @param incidentId - ID del incidente
+   * @param userId - ID del usuario autenticado
+   */
+  async getIncidentUsername(incidentId: number, userId: number) {
+    // 1. Verificar que el incidente existe
+    const incident = await this.incidentsRepo.findIncidentById(incidentId);
+    
+    if (!incident) {
+      throw new NotFoundException(`Incidente con ID ${incidentId} no encontrado`);
+    }
+
+    // 2. ✅ VALIDACIÓN: Solo el dueño puede ver información del incidente
+    if (incident.id_usuario !== userId) {
+      throw new ForbiddenException('No tienes permiso para ver información de este incidente');
+    }
+
+    // 3. Obtener el nombre del usuario desde la tabla usuario
+    const usuarioInfo = await this.incidentsRepo.getIncidentUsername(incident.id_usuario);
+    
+    if (!usuarioInfo) {
+      throw new NotFoundException(`Usuario no encontrado para el incidente`);
+    }
+
+    return {
+      id_incidente: incident.id,
+      id_usuario: incident.id_usuario,
+      nombre_completo: usuarioInfo.nombreCompleto,
+      titulo: incident.titulo
+    };
   }
 
-  async findRecentIncidents() {
-    const incidents = await this.incidentsRepo.findRecentIncidents();
+  /**
+   * Obtener los incidentes más recientes del usuario autenticado (últimos 5)
+   * Solo retorna incidentes del usuario que hace la petición
+   * @param userId - ID del usuario autenticado
+   */
+  async findRecentIncidents(userId: number) {
+    // ✅ Obtener SOLO los incidentes del usuario autenticado
+    const incidents = await this.incidentsRepo.findIncidentsByUserId(userId);
+    
     if (!incidents || incidents.length === 0) {
       throw new NotFoundException('No se encontraron incidentes recientes');
     }
+
+    // Ordenar por fecha de actualización descendente y tomar los últimos 5
+    const recentIncidents = incidents
+      .sort((a, b) => {
+        const dateA = new Date(a.fecha_actualizacion).getTime();
+        const dateB = new Date(b.fecha_actualizacion).getTime();
+        return dateB - dateA;
+      })
+      .slice(0, 5);
+
     // Obtener evidencias para cada incidente
     const incidentsWithEvidences = await Promise.all(
-      incidents.map(async (incident) => {
+      recentIncidents.map(async (incident) => {
         const evidences = await this.evidenceService.findEvidencesByIncidentId(incident.id);
         return {
           ...incident,
@@ -268,14 +343,26 @@ export class IncidentsService {
         };
       })
     );
+
     return incidentsWithEvidences.map(incident => ({
       ...incident,
       es_anonimo: Boolean(incident.es_anonimo)
     }));
   }
 
+  /**
+   * Obtener estadísticas globales de incidentes
+   * Este endpoint retorna estadísticas de TODOS los incidentes (no filtrado por usuario)
+   * Útil para dashboards administrativos
+   */
   async getIncidentStatistics() {
-    return this.incidentsRepo.getIncidentStatistics();
+    const statistics = await this.incidentsRepo.getIncidentStatistics();
+    
+    if (!statistics || statistics.total_incidentes === 0) {
+      throw new NotFoundException('No se encontraron datos para generar estadísticas');
+    }
+
+    return statistics;
   }
 
 }
