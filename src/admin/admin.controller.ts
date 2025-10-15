@@ -1,9 +1,12 @@
 /* eslint-disable prettier/prettier */
-import { Controller, Put, Body, Param, Get, NotFoundException, Patch } from '@nestjs/common';
+import { Controller, Put, Body, Param, Get, NotFoundException, Patch, Post, Delete, ParseIntPipe, HttpCode, HttpStatus } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { IncidentsService } from '../incidents/incidents.service';
+import { CategoriesService } from '../categories/categories.service';
 import { ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { UpdateUserAsAdminDto } from './dto/update-user-admin.dto';
+import { CreateCategoryDto } from '../categories/dto/create-category.dto';
+import { UpdateCategoryDto } from '../categories/dto/update-category.dto';
 
 @ApiTags('Módulo de Administración')
 @ApiBearerAuth() // ← Todos los endpoints requieren autenticación
@@ -11,8 +14,13 @@ import { UpdateUserAsAdminDto } from './dto/update-user-admin.dto';
 export class AdminController {
   constructor(
     private readonly usersService: UsersService, 
-    private readonly incidentsService: IncidentsService
+    private readonly incidentsService: IncidentsService,
+    private readonly categoriesService: CategoriesService
   ) {}
+
+  // ========================================================================
+  // GESTIÓN DE USUARIOS
+  // ========================================================================
 
   @ApiOperation({summary: "Endpoint para listar todos los usuarios"})
   @ApiResponse({status: 200, description: 'Lista de usuarios obtenida exitosamente'})
@@ -53,6 +61,19 @@ export class AdminController {
       return user;
   }
 
+  @ApiOperation({ summary: 'Inactivar un usuario por su ID' })
+  @ApiResponse({ status: 200, description: 'Usuario inactivado exitosamente' })
+  @ApiResponse({ status: 403, description: 'Usuario no encontrado' })
+  @ApiResponse({ status: 401, description: 'No autenticado' })
+  @Patch('user/:id/inactivate')
+  async inactivateUser(@Param('id') id: number) {
+      return this.usersService.inactivateUser(Number(id));
+  }
+
+  // ========================================================================
+  // GESTIÓN DE INCIDENTES
+  // ========================================================================
+
   @ApiOperation({ summary: 'Obtener todos los incidentes' })
   @ApiResponse({ status: 200, description: 'Lista de incidentes obtenida exitosamente.' })
   @ApiResponse({ status: 500, description: 'Error del servidor.' })
@@ -68,7 +89,6 @@ export class AdminController {
   @ApiResponse({ status: 401, description: 'No autenticado' })
   @Get('incidents/:id')
   async findOneIncident(@Param('id') id: string) {
-    // ✅ Usar método admin (sin validación de permisos)
     return this.incidentsService.findIncidentByIdAdmin(Number(id));
   }
 
@@ -116,26 +136,57 @@ export class AdminController {
   })
   @Patch('incidents/:id/evaluate')
   async evaluateIncident(@Param('id') id: string, @Body() body: { id_estatus: number; supervisor?: number }) {
-    // ✅ Usar método admin (sin validación de permisos)
     const incident = await this.incidentsService.findIncidentByIdAdmin(Number(id));
     
     if (!incident) {
       throw new NotFoundException('No se encontró el incidente con un ID: ' + id);
     }
 
-    // ✅ Usar método admin para actualizar
     return this.incidentsService.updateIncidentAdmin(Number(id), { 
       id_estatus: body.id_estatus, 
       supervisor: body.supervisor ?? incident.supervisor 
     });
   }
 
-  @ApiOperation({ summary: 'Inactivar un usuario por su ID' })
-  @ApiResponse({ status: 200, description: 'Usuario inactivado exitosamente' })
-  @ApiResponse({ status: 403, description: 'Usuario no encontrado' })
-  @ApiResponse({ status: 401, description: 'No autenticado' })
-  @Patch('user/:id/inactivate')
-  async inactivateUser(@Param('id') id: number) {
-      return this.usersService.inactivateUser(Number(id));
+  // ========================================================================
+  // GESTIÓN DE CATEGORÍAS
+  // Solo los administradores pueden crear, editar y eliminar categorías
+  // ========================================================================
+
+  @ApiOperation({ summary: '[ADMIN] Crear una nueva categoría de incidente' })
+  @ApiResponse({ status: 201, description: 'Categoría creada exitosamente.' })
+  @ApiResponse({ status: 400, description: 'Datos inválidos.' })
+  @ApiResponse({ status: 401, description: 'No autenticado.' })
+  @Post('categories')
+  async createCategory(@Body() createCategoryDto: CreateCategoryDto) {
+    return this.categoriesService.createCategory(createCategoryDto);
+  }
+
+  @ApiOperation({ summary: '[ADMIN] Actualizar una categoría por su ID' })
+  @ApiResponse({ status: 200, description: 'Categoría actualizada exitosamente.' })
+  @ApiResponse({ status: 400, description: 'Datos inválidos.' })
+  @ApiResponse({ status: 404, description: 'Categoría no encontrada.' })
+  @ApiResponse({ status: 401, description: 'No autenticado.' })
+  @ApiBody({ type: UpdateCategoryDto })
+  @Put('categories/:id')
+  @HttpCode(HttpStatus.OK)
+  async updateCategory(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateCategoryDto: UpdateCategoryDto
+  ) {
+    await this.categoriesService.updateCategory(id, updateCategoryDto);
+    return { message: 'Categoría actualizada exitosamente' };
+  }
+
+  @ApiOperation({ summary: '[ADMIN] Eliminar una categoría por su ID' })
+  @ApiResponse({ status: 200, description: 'Categoría eliminada exitosamente.' })
+  @ApiResponse({ status: 400, description: 'No se puede eliminar la categoría (tiene incidentes asociados).' })
+  @ApiResponse({ status: 404, description: 'Categoría no encontrada.' })
+  @ApiResponse({ status: 401, description: 'No autenticado.' })
+  @Delete('categories/:id')
+  @HttpCode(HttpStatus.OK)
+  async deleteCategory(@Param('id', ParseIntPipe) id: number) {
+    await this.categoriesService.deleteCategory(id);
+    return { message: 'Categoría eliminada exitosamente' };
   }
 }
