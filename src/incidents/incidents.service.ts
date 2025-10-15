@@ -183,6 +183,16 @@ export class IncidentsService {
     }));
   }
 
+  async getUserIncidentSummary(userId: number) {
+    const resumen = await this.incidentsRepo.getUserIncidentSummary(userId);
+    
+    if (!resumen) {
+      throw new NotFoundException(`No se encontró resumen para el usuario con id ${userId}`);
+    }
+  
+    return resumen;
+  }  
+
   async getIncidentStatus(id: number) {
     return this.incidentsRepo.getIncidentStatus(id);
   }

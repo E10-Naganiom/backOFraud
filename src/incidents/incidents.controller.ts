@@ -180,6 +180,14 @@ export class IncidentsController {
     return this.incidentsService.findIncidentsByUserId(Number(id));
   }
 
+  @ApiOperation({ summary: 'Obtener resumen de cierto usuario en base a su ID' })
+  @ApiResponse({ status: 200, description: 'Resumen del usuario obtenido exitosamente.' })
+  @ApiResponse({ status: 404, description: 'Usuario no encontrado.' })
+  @Get('user/:id/summary')
+  async getUserIncidentSummary(@Param('id') id: number) {
+    return this.incidentsService.getUserIncidentSummary(Number(id));
+  }
+
   @ApiOperation({ summary: 'Obtener estatus de un incidente dado su ID' })
   @ApiResponse({ status: 200, description: 'Estatus del incidente obtenido exitosamente.' })
   @ApiResponse({ status: 404, description: 'Incidente no encontrado.' })

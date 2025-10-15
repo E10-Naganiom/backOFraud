@@ -128,6 +128,28 @@ export class IncidentsRepository {
     return rows as Incident[];
   }
 
+  async getUserIncidentSummary(userId: number) {
+    const sql = `
+      SELECT 
+        COUNT(*) AS total_incidentes,
+        SUM(CASE WHEN id_estatus = 2 THEN 1 ELSE 0 END) AS total_aprobados,
+        SUM(CASE WHEN id_estatus = 1 THEN 1 ELSE 0 END) AS total_pendientes,
+        SUM(CASE WHEN id_estatus = 3 THEN 1 ELSE 0 END) AS total_rechazados
+      FROM incidente
+      WHERE id_usuario = ?;
+    `;
+  
+    const [rows]: any = await this.db.getPool().query(sql, [userId]);
+    const result = rows[0];
+
+    return {
+      total_incidentes: Number(result.total_incidentes),
+      total_aprobados: Number(result.total_aprobados),
+      total_pendientes: Number(result.total_pendientes),
+      total_rechazados: Number(result.total_rechazados),
+    };
+  }
+
   async getIncidentStatus(id: number): Promise<{ estatus: String } | null> {
     const sql = `SELECT descripcion FROM estatus WHERE id = ?`;
     const [rows]: any = await this.db.getPool().query(sql, [id]);
