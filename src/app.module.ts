@@ -12,9 +12,14 @@ import { AdminModule } from './admin/admin.module';
 import { DbModule } from './db/db.module';
 import { EvidenceModule } from './evidences/evidence.module';
 import { FilesModule } from './files/file.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,        // ← MUY IMPORTANTE
+      envFilePath: '.env',   // ← Ruta correcta
+    }),
     DbModule,
     AuthModule,
     UsersModule,
