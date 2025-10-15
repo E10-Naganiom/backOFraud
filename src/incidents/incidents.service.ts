@@ -364,5 +364,55 @@ export class IncidentsService {
 
     return statistics;
   }
+  
+  /**
+   * [ADMIN] Obtener un incidente por ID sin validación de permisos
+   * Los administradores pueden ver cualquier incidente
+   * @param id - ID del incidente
+   */
+  async findIncidentByIdAdmin(id: number) {
+    const incident = await this.incidentsRepo.findIncidentById(id);
+    
+    if (!incident) {
+      throw new NotFoundException(`Incidente con ID ${id} no encontrado`);
+    }
+
+    const evidences = await this.evidenceService.findEvidencesByIncidentId(id);
+
+    return {
+      ...incident,
+      evidencias: evidences
+    };
+  }
+
+  /**
+   * [ADMIN] Actualizar un incidente sin validación de permisos
+   * Los administradores pueden editar cualquier incidente
+   * @param id - ID del incidente
+   * @param data - Datos a actualizar
+   */
+  async updateIncidentAdmin(id: number, data: Partial<Incident>) {
+    if (!data || Object.keys(data).length === 0) {
+      throw new Error('Se requiere al menos un campo para actualizar');
+    }
+
+    // Verificar que el incidente existe
+    const incident = await this.incidentsRepo.findIncidentById(id);
+    if (!incident) {
+      throw new NotFoundException(`Incidente con ID ${id} no encontrado`);
+    }
+
+    // Actualizar sin validación de permisos
+    await this.incidentsRepo.updateIncident(id, data);
+
+    // Retornar el incidente actualizado
+    const updatedIncident = await this.incidentsRepo.findIncidentById(id);
+    const evidences = await this.evidenceService.findEvidencesByIncidentId(id);
+
+    return {
+      ...updatedIncident,
+      evidencias: evidences
+    };
+  }
 
 }
