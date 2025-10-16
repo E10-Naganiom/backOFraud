@@ -45,19 +45,19 @@ export class UsersService {
         return isValid ? user : null;
     }
 
-    async updateUser(id:number, data: { email?: string; name?: string; apellido?: string; password?: string; is_admin?: boolean; is_active?: boolean }) {
+    async updateUser(id:number, data: { email?: string; nombre?: string; apellido?: string; contrasena?: string; is_admin?: boolean; is_active?: boolean }) {
         if (!data) {
             throw new Error('Update data is required');
         }
         let hashedPassword: string | undefined;
-        if(data.password){
-            hashedPassword = sha256WithSalt(data.password, generateSalt());
+        if(data.contrasena){
+            hashedPassword = sha256WithSalt(data.contrasena, generateSalt());
         }
         return this.usersRepository.updateUser(id, {
             email: data.email,
-            name: data.name,
+            nombre: data.nombre,
             apellido: data.apellido,
-            password_hash: hashedPassword,
+            contrasena: hashedPassword,
             is_admin: data.is_admin,
             is_active: data.is_active
         });

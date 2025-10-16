@@ -46,19 +46,19 @@ export class UsersRepository{
         return result[0] || null;
     }
 
-    async updateUser(id:number, fields: { email?: string; name?: string; apellido?: string; password_hash?: string; is_admin?: boolean; is_active?: boolean }): Promise<User | null>{
+    async updateUser(id:number, fields: { email?: string; nombre?: string; apellido?: string; contrasena?: string; is_admin?: boolean; is_active?: boolean }): Promise<User | null>{
         const updates: string[] = [];
         if(fields.email){
             updates.push(`email = '${fields.email}'`);
         }
-        if(fields.name){
-            updates.push(`nombre = '${fields.name}'`);
+        if(fields.nombre){
+            updates.push(`nombre = '${fields.nombre}'`);
         }
         if(fields.apellido){
             updates.push(`apellido = '${fields.apellido}'`);
         }
-        if(fields.password_hash){
-            updates.push(`contrasena = '${fields.password_hash}'`);
+        if(fields.contrasena){
+            updates.push(`contrasena = '${fields.contrasena}'`);
         }
         if(fields.is_active !== undefined){
             updates.push(`es_activo = ${fields.is_active ? 1 : 0}`);

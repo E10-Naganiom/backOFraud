@@ -5,7 +5,7 @@ export class UpdateUserDto  {
     @ApiProperty({ example: 'Juan', description: 'Nombre del usuario', required: false})
     @IsString()
     @IsOptional()
-    name?: string;
+    nombre?: string;
     @ApiProperty({ example: 'Niño', description: 'Apellido del usuario', required: false})
     @IsString()
     @IsOptional()
@@ -17,7 +17,7 @@ export class UpdateUserDto  {
     @ApiProperty({ example: 'password123', description: 'Contraseña en texto plano', required: false})
     @IsString()
     @IsOptional()
-    password?: string;
+    contrasena?: string;
     @ApiPropertyOptional({ example: false, description: 'Indica si es administrador', required: false }) 
     @IsBoolean() 
     @IsOptional()

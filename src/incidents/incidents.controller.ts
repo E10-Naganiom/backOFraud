@@ -256,5 +256,15 @@ export class IncidentsController {
     @Param('id') id: number
   ) {
     return this.incidentsService.deleteIncident(Number(id), user.id);
+
+
+  @ApiOperation({ summary: 'Obtener resumen de cierto usuario en base a su ID' })
+  @ApiResponse({ status: 200, description: 'Resumen del usuario obtenido exitosamente.' })
+  @ApiResponse({ status: 404, description: 'Usuario no encontrado.' })
+  @Get('user/:id/summary')
+  async getUserIncidentSummary(@Param('id') id: number) {
+    return this.incidentsService.getUserIncidentSummary(Number(id));
+  }
+
   }
 }
