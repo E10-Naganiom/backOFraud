@@ -276,18 +276,9 @@ export class IncidentsService {
       estatus: estatusInfo.estatus,
       titulo: incident.titulo
     };
-    
-  async getUserIncidentSummary(userId: number) {
-    const resumen = await this.incidentsRepo.getUserIncidentSummary(userId);
-    
-    if (!resumen) {
-      throw new NotFoundException(`No se encontró resumen para el usuario con id ${userId}`);
-    }
-  
-    return resumen;
-  }  
 
   }
+  
 
   /**
    * Obtener el nombre de usuario asociado a un incidente con validación de permisos
@@ -425,5 +416,15 @@ export class IncidentsService {
       evidencias: evidences
     };
   }
+
+    async getUserIncidentSummary(userId: number) {
+    const resumen = await this.incidentsRepo.getUserIncidentSummary(userId);
+    
+    if (!resumen) {
+      throw new NotFoundException(`No se encontró resumen para el usuario con id ${userId}`);
+    }
+  
+    return resumen;
+  }  
 
 }

@@ -9,7 +9,8 @@ import {
   Param, 
   Patch,
   UploadedFiles,
-  UseInterceptors
+  UseInterceptors,
+  ForbiddenException
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { IncidentsService } from './incidents.service';
@@ -256,15 +257,26 @@ export class IncidentsController {
     @Param('id') id: number
   ) {
     return this.incidentsService.deleteIncident(Number(id), user.id);
+  }
 
-
-  @ApiOperation({ summary: 'Obtener resumen de cierto usuario en base a su ID' })
+@ApiOperation({ summary: 'Obtener resumen de incidentes del usuario autenticado' })
   @ApiResponse({ status: 200, description: 'Resumen del usuario obtenido exitosamente.' })
+  @ApiResponse({ status: 403, description: 'No tienes permiso para ver este resumen.' })
   @ApiResponse({ status: 404, description: 'Usuario no encontrado.' })
+  @ApiResponse({ status: 401, description: 'No autenticado.' })
   @Get('user/:id/summary')
-  async getUserIncidentSummary(@Param('id') id: number) {
-    return this.incidentsService.getUserIncidentSummary(Number(id));
+  async getUserIncidentSummary(
+    @CurrentUser() user: tokenService.UserProfile, // ← Usuario autenticado
+    @Param('id') id: number
+  ) {
+    const targetUserId = Number(id);
+
+    // ✅ VALIDACIÓN: Usuario solo puede ver su propio resumen
+    if (user.id !== targetUserId) {
+      throw new ForbiddenException('No tienes permiso para ver el resumen de otro usuario');
+    }
+
+    return this.incidentsService.getUserIncidentSummary(targetUserId);
   }
 
-  }
 }
