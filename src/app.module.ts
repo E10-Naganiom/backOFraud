@@ -1,41 +1,39 @@
+
 /* eslint-disable prettier/prettier */
+
 import { Module } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
+import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
-import { AuthModule } from './auth/auth.module';
-import { UsersModule } from './users/users.module';
-import { IncidentsModule } from './incidents/incidents.module';
-import { CategoriesModule } from './categories/categories.module';
-import { AdminModule } from './admin/admin.module';
 import { DbModule } from './db/db.module';
-import { EvidenceModule } from './evidences/evidence.module';
+import { UsersModule } from './users/users.module';
+import { JwtModule } from '@nestjs/jwt';
+import { AuthModule } from './auth/auth.module';
+import { AdminModule } from './admin/admin.module';
+import { IncidentsModule } from './incidents/incidents.module';
 import { FilesModule } from './files/file.module';
-import { ConfigModule } from '@nestjs/config';
+import { CategoriesController } from './categories/categories.controller';
+import { CategoriesModule } from './categories/categories.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
-      isGlobal: true,        // ← MUY IMPORTANTE
-      envFilePath: '.env',   // ← Ruta correcta
+      envFilePath: '.env.local',
+      isGlobal: true,
     }),
-    DbModule,
-    AuthModule,
-    UsersModule,
-    IncidentsModule,
-    CategoriesModule,
-    AdminModule,
-    EvidenceModule,
     FilesModule,
+    DbModule,
+    UsersModule,
+    AdminModule,
+    AuthModule,
+    IncidentsModule, 
+    CategoriesModule,
+    JwtModule.register({
+      global: true,
+      secret: process.env.JWT_SECRET   //"supersecret"
+    })
   ],
   controllers: [AppController],
-  providers: [
-    AppService,
-    {
-      provide: APP_GUARD,
-      useClass: JwtAuthGuard, // ← Guard aplicado globalmente a TODOS los endpoints
-    },
-  ],
+  providers: [AppService],
 })
 export class AppModule {}

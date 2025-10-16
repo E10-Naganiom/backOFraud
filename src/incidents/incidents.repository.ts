@@ -128,7 +128,7 @@ export class IncidentsRepository {
     return rows as Incident[];
   }
 
-    async getUserIncidentSummary(userId: number) {
+  async getUserIncidentSummary(userId: number) {
     const sql = `
       SELECT 
         COUNT(*) AS total_incidentes,
@@ -149,44 +149,30 @@ export class IncidentsRepository {
       total_rechazados: Number(result.total_rechazados),
     };
   }
-  
-  /**
-   * Obtener el estatus de un incidente consultando la tabla estatus
-   * @param id - ID del estatus del incidente
-   */
 
   async getIncidentStatus(id: number): Promise<{ estatus: String } | null> {
     const sql = `SELECT descripcion FROM estatus WHERE id = ?`;
-
     const [rows]: any = await this.db.getPool().query(sql, [id]);
     return rows[0] || null;
   }
 
-  /**
-   * Obtener el nombre completo del usuario asociado a un incidente
-   * @param id - ID del usuario
-   */
   async getIncidentUsername(id: number): Promise<{ nombreCompleto: string } | null> {
-    const sql = `SELECT nombre, apellido FROM usuario WHERE id = ?`;
+    const sql = `SELECT nombre,apellido FROM usuario WHERE id = ?`;
     const [rows]: any = await this.db.getPool().query(sql, [id]);
     if (rows[0]) {
       return { nombreCompleto: rows[0].nombre + ' ' + rows[0].apellido };
     }
-    return null;
+    else {
+      return null;
+    }
   }
 
-  /**
-   * Obtener los últimos 5 incidentes recientes con estatus 2
-   */
   async findRecentIncidents(): Promise<Incident[]> {
     const sql = `SELECT * FROM incidente WHERE id_estatus = 2 ORDER BY fecha_actualizacion DESC LIMIT 5`;
     const [rows]: any = await this.db.getPool().query(sql);
     return rows as Incident[];
   }
 
-  /**
-   * Obtener estadísticas globales de todos los incidentes
-   */
   async getIncidentStatistics() {
     const pool = this.db.getPool();
   
@@ -237,10 +223,10 @@ export class IncidentsRepository {
       GROUP BY red_social
     `);
   
-    // Función para redondear sin perder el tipo numérico
+    // 🔹 Función para redondear sin perder el tipo numérico
     const round2 = (n: number) => Math.round(n * 100) / 100;
   
-    // Cálculos con porcentajes numéricos
+    // --- Cálculos con porcentajes numéricos ---
     const porEstatusConPorcentaje = porEstatus.map((e: any) => ({
       ...e,
       porcentaje: totalIncidentes > 0 ? round2((e.total / totalIncidentes) * 100) : 0,
@@ -270,7 +256,7 @@ export class IncidentsRepository {
         totalConRedSocial > 0 ? round2((r.total / totalConRedSocial) * 100) : 0,
     }));
   
-    // Estructura final del resultado
+    // 🧠 Estructura final del resultado
     return {
       total_incidentes: totalIncidentes,
       total_categorias: totalCategorias,

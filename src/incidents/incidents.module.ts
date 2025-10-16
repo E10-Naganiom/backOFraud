@@ -7,12 +7,9 @@ import { IncidentsRepository } from './incidents.repository';
 import { DbModule } from '../db/db.module';
 import { EvidenceModule } from '../evidences/evidence.module';
 import { FilesModule } from '../files/file.module';
-import { forwardRef } from '@nestjs/common';
 
 @Module({
-  imports: [DbModule,
-            forwardRef(() => EvidenceModule), // ← Usar forwardRef
-            FilesModule],
+  imports: [DbModule, EvidenceModule, FilesModule],
   controllers: [IncidentsController],
   providers: [IncidentsService, IncidentsRepository],
   exports: [IncidentsService]

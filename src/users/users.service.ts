@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import { ConflictException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { UsersRepository } from './users.repository';
 import { generateSalt, sha256WithSalt } from '../util/hash/hash.util';
@@ -31,16 +30,10 @@ export class UsersService {
     async validateUser(email: string, password: string){
         const user = await this.usersRepository.findByEmail(email);
         if(!user) return null;
-
-        if (!user.is_active) {
-            return null; // No permitir login de usuarios inactivos
-        }
-
         console.log(user);
         console.log("Password : " + password);
         console.log("Password Hash : " + user.contrasena);
         console.log("Hashed Password : " + sha256WithSalt(password, user.salt));
-        
         const isValid = user.contrasena === sha256WithSalt(password, user.salt);
         return isValid ? user : null;
     }
