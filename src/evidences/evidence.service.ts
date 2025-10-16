@@ -74,4 +74,28 @@ export class EvidenceService {
   async getEvidenceCount(id_incidente: number): Promise<number> {
     return this.evidenceRepo.countEvidencesByIncidentId(id_incidente);
   }
+
+  /**
+   * Eliminar una evidencia con validación de permisos
+   * @param evidenceId - ID de la evidencia
+   * @param incidentId - ID del incidente (para validación)
+   * @param userId - ID del usuario autenticado
+   */
+  async deleteEvidenceSecure(evidenceId: number, incidentId: number, userId: number): Promise<void> {
+    // Verificar que la evidencia existe y pertenece al incidente correcto
+    const evidence = await this.evidenceRepo.findEvidenceById(evidenceId);
+    
+    if (!evidence) {
+      throw new NotFoundException(`Evidencia con ID ${evidenceId} no encontrada`);
+    }
+
+    // Validar que la evidencia pertenece al incidente indicado
+    if (evidence.id_incidente !== incidentId) {
+      throw new BadRequestException('La evidencia no pertenece al incidente especificado');
+    }
+
+    // Nota: La validación de que el incidente pertenece al usuario
+    // se hace en el controller antes de llamar a este método
+    await this.deleteEvidence(evidenceId);
+  }
 }

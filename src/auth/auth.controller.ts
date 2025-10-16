@@ -1,7 +1,9 @@
+/* eslint-disable prettier/prettier */
 import { UsersService } from "src/users/users.service";
 import { TokenService } from "./token.service";
 import { Body, Controller, Get, Post, Req, UseGuards } from "@nestjs/common";
 import { JwtAuthGuard } from "src/common/guards/jwt-auth.guard";
+import { Public } from "src/common/decorators/public.decorator"; // ← NUEVO
 import type { AuthenticatedRequest } from "src/common/interfaces/authenticated-request";
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiProperty, ApiResponse, ApiTags } from "@nestjs/swagger";
 
@@ -25,6 +27,7 @@ export class AuthController {
         private readonly userService: UsersService
     ) {}
 
+    @Public() // ← NUEVO: Endpoint público (sin autenticación)
     @ApiOperation({ summary: 'Endpoint para iniciar sesión y obtener tokens de acceso y refresh' })
     @ApiBody({ type: LoginDto, examples: {
         Ejemplo: {
@@ -43,7 +46,7 @@ export class AuthController {
         return { error: 'Invalid credentials' };
     }
 
-
+    @Public() // ← NUEVO: Endpoint público (sin autenticación)
     @ApiOperation({ summary: 'Endpoint para refrescar el token de acceso usando un token de refresh' })
     @ApiBody({ type: RefreshDto, examples: {
         Ejemplo: {
@@ -66,12 +69,11 @@ export class AuthController {
 
     @ApiOperation({ summary: 'Endpoint para obtener el perfil del usuario autenticado' })
     @Get('profile')
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(JwtAuthGuard) // ← Ya no es necesario, pero no hace daño dejarlo
     @ApiBearerAuth()
     @ApiResponse({ status: 200, description: 'User profile retrieved successfully.' })
     @ApiResponse({ status: 401, description: 'El token es invalido o no se envio.' })
     getProfile(@Req() req: AuthenticatedRequest) {
         return {profile: req.user.profile};
     }
-
 }
