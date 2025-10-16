@@ -417,7 +417,7 @@ export class IncidentsService {
     };
   }
 
-    async getUserIncidentSummary(userId: number) {
+  async getUserIncidentSummary(userId: number) {
     const resumen = await this.incidentsRepo.getUserIncidentSummary(userId);
     
     if (!resumen) {

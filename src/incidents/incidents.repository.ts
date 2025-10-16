@@ -128,7 +128,7 @@ export class IncidentsRepository {
     return rows as Incident[];
   }
 
-    async getUserIncidentSummary(userId: number) {
+  async getUserIncidentSummary(userId: number) {
     const sql = `
       SELECT 
         COUNT(*) AS total_incidentes,
