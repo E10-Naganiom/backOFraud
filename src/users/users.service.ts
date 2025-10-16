@@ -32,10 +32,6 @@ export class UsersService {
         const user = await this.usersRepository.findByEmail(email);
         if(!user) return null;
 
-        if (!user.is_active) {
-            return null; // No permitir login de usuarios inactivos
-        }
-
         console.log(user);
         console.log("Password : " + password);
         console.log("Password Hash : " + user.contrasena);
