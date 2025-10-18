@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { Controller, Post, ForbiddenException } from "@nestjs/common";
+import { Controller, Post, ForbiddenException, BadRequestException } from "@nestjs/common";
 import { Body, Param, Put, Patch } from "@nestjs/common/decorators";
 import { UsersService } from "./users.service";
 import { Public } from "src/common/decorators/public.decorator";
@@ -81,4 +81,38 @@ export class UsersController{
 
         return this.usersService.inactivateUser(targetUserId);
     }
+
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'Cambiar contraseña del usuario autenticado' })
+    @ApiResponse({ status: 200, description: 'Contraseña actualizada exitosamente' })
+    @ApiResponse({ status: 400, description: 'Solicitud inválida' })
+    @ApiResponse({ status: 403, description: 'No tienes permiso para cambiar la contraseña de este usuario' })
+    @ApiResponse({ status: 401, description: 'No autenticado' })
+    @Patch(':id/change-password')
+    async changePassword(
+    @CurrentUser() user: tokenService.UserProfile,
+    @Param('id') id: number,
+    @Body('currentPassword') currentPassword: string,
+    @Body('newPassword') newPassword: string,
+    @Body('confirmPassword') confirmPassword: string
+    ) {
+    const targetUserId = Number(id);
+
+    if (user.id !== targetUserId) {
+        throw new ForbiddenException('No puedes cambiar la contraseña de otro usuario');
+    }
+
+    const existingUser = await this.usersService.validateUser(user.email, currentPassword);
+    if (!existingUser) {
+        throw new BadRequestException('La contraseña actual es incorrecta');
+    }
+
+    if (newPassword !== confirmPassword) {
+        throw new BadRequestException('Las contraseñas no coinciden');
+    }
+
+    await this.usersService.changePassword(targetUserId, newPassword);
+    return { message: 'Contraseña actualizada exitosamente' };
+    }
+
 }

@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { ConflictException, Injectable, InternalServerErrorException } from '@nestjs/common';
+import { ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { UsersRepository } from './users.repository';
 import { generateSalt, sha256WithSalt } from '../util/hash/hash.util';
 
@@ -71,4 +71,17 @@ export class UsersService {
         return this.usersRepository.updateUser(id, { is_active: false });
     }
 
+    async changePassword(id: number, newPassword: string) {
+        const user = await this.usersRepository.findById(id);
+        if (!user) {
+          throw new NotFoundException('Usuario no encontrado');
+        }
+      
+        const salt = generateSalt();
+        const newHashedPassword = sha256WithSalt(newPassword, salt);
+        await this.usersRepository.updateUser(id, { password_hash: newHashedPassword, salt });
+      
+        return { success: true };
+    }
+      
 }

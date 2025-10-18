@@ -33,7 +33,7 @@ export class TokenService {
         } satisfies AccessPayload, 
         {
             secret: "supersecret",    //process.env.JWT_SECRET,     //"supersecret"
-            expiresIn: "1m"      //process.env.JWT_ACCESS_EXPIRES_IN         //"1m"
+            expiresIn: "10m"      //process.env.JWT_ACCESS_EXPIRES_IN         //"1m"
         });
     }
 

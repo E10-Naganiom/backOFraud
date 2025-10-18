@@ -258,10 +258,10 @@ export class IncidentsService {
       throw new NotFoundException(`Incidente con ID ${incidentId} no encontrado`);
     }
 
-    // 2. ✅ VALIDACIÓN: Solo el dueño puede ver el estatus de su incidente
-    if (incident.id_usuario !== userId) {
-      throw new ForbiddenException('No tienes permiso para ver el estatus de este incidente');
-    }
+    // // 2. ✅ VALIDACIÓN: Solo el dueño puede ver el estatus de su incidente
+    // if (incident.id_usuario !== userId) {
+    //   throw new ForbiddenException('No tienes permiso para ver el estatus de este incidente');
+    // }
 
     // 3. Obtener el estatus desde la tabla estatus usando el id_estatus del incidente
     const estatusInfo = await this.incidentsRepo.getIncidentStatus(incident.id_estatus);
@@ -291,10 +291,10 @@ export class IncidentsService {
       throw new NotFoundException(`Incidente con ID ${incidentId} no encontrado`);
     }
 
-    // 2. ✅ VALIDACIÓN: Solo el dueño puede ver información del incidente
-    if (incident.id_usuario !== userId) {
-      throw new ForbiddenException('No tienes permiso para ver información de este incidente');
-    }
+    // // 2. ✅ VALIDACIÓN: Solo el dueño puede ver información del incidente
+    // if (incident.id_usuario !== userId) {
+    //   throw new ForbiddenException('No tienes permiso para ver información de este incidente');
+    // }
 
     // 3. Obtener el nombre del usuario desde la tabla usuario
     const usuarioInfo = await this.incidentsRepo.getIncidentUsername(incident.id_usuario);
@@ -316,9 +316,9 @@ export class IncidentsService {
    * Solo retorna incidentes del usuario que hace la petición
    * @param userId - ID del usuario autenticado
    */
-  async findRecentIncidents(userId: number) {
+  async findRecentIncidents() {
     // ✅ Obtener SOLO los incidentes del usuario autenticado
-    const incidents = await this.incidentsRepo.findIncidentsByUserId(userId);
+    const incidents = await this.incidentsRepo.findRecentIncidents();
     
     if (!incidents || incidents.length === 0) {
       throw new NotFoundException('No se encontraron incidentes recientes');

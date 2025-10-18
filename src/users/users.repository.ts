@@ -46,7 +46,7 @@ export class UsersRepository{
         return result[0] || null;
     }
 
-    async updateUser(id:number, fields: { email?: string; name?: string; apellido?: string; password_hash?: string; is_admin?: boolean; is_active?: boolean }): Promise<User | null>{
+    async updateUser(id:number, fields: { email?: string; name?: string; apellido?: string; password_hash?: string; is_admin?: boolean; is_active?: boolean; salt?: string }): Promise<User | null>{
         const updates: string[] = [];
         if(fields.email){
             updates.push(`email = '${fields.email}'`);
@@ -65,6 +65,9 @@ export class UsersRepository{
         }
         if(fields.is_admin !== undefined){
             updates.push(`es_admin = ${fields.is_admin ? 1 : 0}`);
+        }
+        if (fields.salt) {
+            updates.push(`salt = '${fields.salt}'`);
         }
         if(updates.length === 0) return this.findById(id);
 

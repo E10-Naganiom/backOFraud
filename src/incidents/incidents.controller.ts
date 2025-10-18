@@ -102,7 +102,7 @@ export class IncidentsController {
   // RUTAS ESPECÍFICAS - DEBEN IR ANTES DE :id
   // ========================================================================
 
-  @ApiOperation({ summary: 'Obtener los incidentes más recientes del usuario autenticado (últimos 5)' })
+  @ApiOperation({ summary: 'Obtener los incidentes más recientes globales (últimos 5)' })
   @ApiResponse({ status: 200, description: 'Lista de incidentes recientes obtenida exitosamente.' })
   @ApiResponse({ status: 404, description: 'No se encontraron incidentes recientes.' })
   @ApiResponse({ status: 401, description: 'No autenticado.' })
@@ -110,7 +110,7 @@ export class IncidentsController {
   async findRecentIncidents(
     @CurrentUser() user: tokenService.UserProfile
   ) {
-    return this.incidentsService.findRecentIncidents(user.id);
+    return this.incidentsService.findRecentIncidents();
   }
 
   @ApiOperation({ summary: 'Obtener estadísticas globales de incidentes' })
@@ -271,7 +271,7 @@ export class IncidentsController {
   ) {
     const targetUserId = Number(id);
 
-    // ✅ VALIDACIÓN: Usuario solo puede ver su propio resumen
+    // VALIDACIÓN: Usuario solo puede ver su propio resumen
     if (user.id !== targetUserId) {
       throw new ForbiddenException('No tienes permiso para ver el resumen de otro usuario');
     }
