@@ -51,9 +51,6 @@ async function bootstrap() {
   const port = process.env.PORT ?? 3000;
   await app.listen(port);
   
-  console.log(`🚀 Application is running on: http://10.48.238.60:${port}`);
-  console.log(`📚 Swagger documentation: http://10.48.238.60:${port}/docs`);
-  console.log(`✅ CORS enabled for frontend connections`);
 }
 
 bootstrap();
