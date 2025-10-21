@@ -83,11 +83,22 @@ export class IncidentsController {
     @Body() createIncidentDto: CreateIncidentDto,
     @UploadedFiles() files?: Express.Multer.File[]
   ) {
-    return this.incidentsService.createIncident(
-      user.id,
-      createIncidentDto, 
-      files
-    );
+  const es_anonimo = createIncidentDto.es_anonimo === true || 
+                      createIncidentDto.es_anonimo === 'true' || 
+                      createIncidentDto.es_anonimo === '1' ||
+                      (createIncidentDto.es_anonimo as any) === 1;
+
+  // Crear el DTO corregido
+  const correctedDto = {
+    ...createIncidentDto,
+    es_anonimo
+  };
+
+  return this.incidentsService.createIncident(
+    user.id,
+    correctedDto,
+    files
+  );
   }
 
   @ApiOperation({ summary: 'Obtener todos los incidentes con sus evidencias' })

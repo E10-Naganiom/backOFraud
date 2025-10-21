@@ -39,5 +39,5 @@ export class CreateIncidentDto {
     supervisor?: number;
     @ApiProperty({ example: true, description: 'Indica si el reporte es anónimo', required: true })
     @IsBoolean()
-    es_anonimo: boolean;
+    es_anonimo: boolean | string;
 };
