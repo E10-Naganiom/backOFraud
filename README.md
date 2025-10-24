@@ -1,98 +1,407 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# oFraud Backend - API REST
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Backend del sistema oFraud desarrollado con NestJS, TypeScript y MySQL. Proporciona una API REST completa para la gestión de incidentes de ciberdelitos.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## 📋 Tabla de Contenidos
 
-## Description
+- [Requisitos Previos](#requisitos-previos)
+- [Tecnologías](#tecnologías)
+- [Instalación](#instalación)
+- [Configuración](#configuración)
+- [Ejecución](#ejecución)
+- [Estructura del Proyecto](#estructura-del-proyecto)
+- [API Endpoints](#api-endpoints)
+- [Base de Datos](#base-de-datos)
+- [Autenticación](#autenticación)
+- [Solución de Problemas](#solución-de-problemas)
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+---
 
-## Project setup
+## 🔧 Requisitos Previos
 
-```bash
-$ npm install
-```
+Antes de instalar el backend, asegúrese de tener instalado:
 
-## Compile and run the project
+- **Node.js**: v18.0.0 o superior
+- **npm**: v9.0.0 o superior (viene con Node.js)
+- **MySQL**: v8.0 o superior
+- **Git**: Para clonar el repositorio
+
+### Verificar instalaciones:
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+node --version
+npm --version
+mysql --version
 ```
 
-## Run tests
+---
+
+## 🛠 Tecnologías
+
+- **Framework**: NestJS 10.x
+- **Lenguaje**: TypeScript
+- **Base de Datos**: MySQL 8.0
+- **Autenticación**: JWT (JSON Web Tokens)
+- **Validación**: class-validator, class-transformer
+- **Documentación**: Swagger/OpenAPI
+
+---
+
+## 📦 Instalación
+
+### 1. Clonar el repositorio
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+git clone <https://github.com/E10-Naganiom/backOFraud>
+cd backend
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### 2. Instalar dependencias
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+npm install
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+Este comando instalará todas las dependencias necesarias definidas en `package.json`.
 
-## Resources
+---
 
-Check out a few resources that may come in handy when working with NestJS:
+## ⚙️ Configuración
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+### 1. Configurar Base de Datos MySQL
 
-## Support
+#### Crear la base de datos:
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+```sql
+CREATE DATABASE ofraud CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
 
-## Stay in touch
+#### Importar el esquema:
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+Si tiene un archivo SQL con el esquema:
 
-## License
+```bash
+mysql -u root -p ofraud < database/schema.sql
+```
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+O ejecute manualmente el script de creación de tablas que se encuentra en la documentación del proyecto.
+
+### 2. Configurar variables de entorno
+
+Cree un archivo `.env` en la raíz del proyecto backend:
+
+```bash
+cp .env.example .env
+```
+
+Edite el archivo `.env` con sus configuraciones:
+
+```env
+# Configuración del Servidor
+PORT=3000
+NODE_ENV=development
+
+# Configuración de Base de Datos
+DB_HOST=localhost
+DB_PORT=3306
+DB_USERNAME=root
+DB_PASSWORD=tu_contraseña_mysql
+DB_NAME=ofraud
+
+# Configuración JWT
+JWT_SECRET=tu_secreto_jwt_muy_seguro_cambialo
+JWT_REFRESH_SECRET=tu_secreto_refresh_muy_seguro_cambialo
+JWT_EXPIRATION=24h
+
+# CORS (Orígenes permitidos)
+CORS_ORIGIN=http://localhost:3000,http://localhost:3001
+```
+
+⚠️ **IMPORTANTE**: 
+- Cambie `JWT_SECRET` y `JWT_REFRESH_SECRET` por valores seguros únicos
+- En producción, use `NODE_ENV=production`
+- Configure `CORS_ORIGIN` con las URLs de su frontend
+
+---
+
+## 🚀 Ejecución
+
+### Modo Desarrollo (con hot-reload)
+
+```bash
+npm run start:dev
+```
+
+El servidor se iniciará en `http://localhost:3000` (o el puerto configurado en `.env`)
+
+### Modo Producción
+
+```bash
+# Compilar el proyecto
+npm run build
+
+# Ejecutar en producción
+npm run start:prod
+```
+
+### Verificar que el servidor está corriendo
+
+Abra su navegador en:
+- **API**: `http://localhost:3000`
+- **Documentación Swagger**: `http://localhost:3000/docs`
+
+Debería ver la documentación interactiva de la API.
+
+---
+
+## 📁 Estructura del Proyecto
+
+```
+backend/
+├── src/
+│   ├── auth/                    # Módulo de autenticación (JWT, login)
+│   │   ├── auth.controller.ts
+│   │   ├── auth.service.ts
+│   │   ├── token.service.ts
+│   │   └── guards/              # Guards de autenticación
+│   ├── users/                   # Módulo de gestión de usuarios
+│   │   ├── users.controller.ts
+│   │   ├── users.service.ts
+│   │   └── dto/
+│   ├── incidents/               # Módulo de incidentes
+│   │   ├── incidents.controller.ts
+│   │   ├── incidents.service.ts
+│   │   ├── incidents.repository.ts
+│   │   └── dto/
+│   ├── categories/              # Módulo de categorías
+│   │   ├── categories.controller.ts
+│   │   ├── categories.service.ts
+│   │   └── dto/
+│   ├── evidence/                # Módulo de evidencias
+│   │   ├── evidence.controller.ts
+│   │   └── evidence.service.ts
+│   ├── admin/                   # Módulo de administración
+│   │   └── admin.controller.ts
+│   ├── common/                  # Utilidades comunes
+│   │   ├── decorators/
+│   │   └── filters/
+│   ├── app.module.ts            # Módulo principal
+│   └── main.ts                  # Punto de entrada
+├── public/                      # Archivos estáticos (evidencias)
+│   └── uploads/
+├── .env                         # Variables de entorno
+├── .env.example                 # Ejemplo de variables
+├── package.json
+└── tsconfig.json
+```
+
+---
+
+## 🔌 API Endpoints
+
+### Documentación Completa
+
+La documentación completa e interactiva está disponible en Swagger:
+
+**URL**: `http://localhost:3000/docs`
+
+### Endpoints Principales
+
+#### Autenticación
+
+```
+POST   /auth/login              # Iniciar sesión
+POST   /auth/register           # Registrar usuario
+GET    /auth/profile            # Obtener perfil del usuario autenticado
+```
+
+#### Usuarios
+
+```
+GET    /users                   # Obtener todos los usuarios
+GET    /users/:id               # Obtener usuario por ID
+POST   /users                   # Crear nuevo usuario
+PUT    /users/:id               # Actualizar usuario
+```
+
+#### Admin - Usuarios
+
+```
+GET    /admin/user/list         # Listar todos los usuarios (Admin)
+GET    /admin/user/:id          # Obtener usuario por ID (Admin)
+PUT    /admin/user/:id          # Actualizar usuario (Admin)
+PATCH  /admin/user/:id/inactivate  # Inactivar usuario (Admin)
+```
+
+#### Incidentes
+
+```
+GET    /incidents               # Obtener incidentes del usuario
+GET    /incidents/:id           # Obtener incidente por ID
+POST   /incidents               # Crear nuevo incidente
+PUT    /incidents/:id           # Actualizar incidente
+```
+
+#### Admin - Incidentes
+
+```
+GET    /admin/incidents/list           # Listar todos los incidentes
+GET    /admin/incidents/list/pending   # Listar incidentes pendientes
+GET    /admin/incidents/list/approved  # Listar incidentes aprobados
+GET    /admin/incidents/list/rejected  # Listar incidentes rechazados
+GET    /admin/incidents/:id            # Obtener incidente por ID
+PATCH  /admin/incidents/:id/evaluate   # Evaluar incidente (aprobar/rechazar)
+```
+
+#### Estadísticas
+
+```
+GET    /incidents/statistics/summary   # Obtener estadísticas generales
+```
+
+#### Categorías
+
+```
+GET    /categories              # Obtener todas las categorías
+GET    /categories/:id          # Obtener categoría por ID
+POST   /admin/categories        # Crear categoría (Admin)
+PUT    /admin/categories/:id    # Actualizar categoría (Admin)
+DELETE /admin/categories/:id    # Eliminar categoría (Admin)
+```
+
+---
+
+## 🗄️ Base de Datos
+
+### Estructura Principal
+
+**Tablas principales:**
+
+- `usuario`: Almacena información de usuarios y administradores
+- `incidente`: Registros de incidentes reportados
+- `categoria`: Tipos de ciberdelitos
+- `estatus`: Estados de los incidentes (Pendiente, Aprobado, Rechazado)
+- `evidencia`: Archivos de evidencia asociados a incidentes
+
+### Migrar/Actualizar Base de Datos
+
+Si necesita actualizar el esquema de la base de datos:
+
+```bash
+# Ejecutar migraciones (si las hay)
+npm run migration:run
+
+# Revertir última migración
+npm run migration:revert
+```
+
+---
+
+## 🔐 Autenticación
+
+### Sistema JWT
+
+El backend usa **JSON Web Tokens (JWT)** para autenticación:
+
+1. **Login**: El usuario envía credenciales a `/auth/login`
+2. **Token**: El backend retorna un `access_token` y `refresh_token`
+3. **Autenticación**: Las peticiones subsecuentes incluyen el token en el header:
+   ```
+   Authorization: Bearer <access_token>
+   ```
+
+### Duración de Tokens
+
+- **Access Token**: 24 horas (configurable en `.env`)
+- **Refresh Token**: 7 días
+
+### Rutas Protegidas
+
+Las rutas con el prefijo `/admin/*` requieren:
+- Token JWT válido
+- Usuario con `is_admin: true`
+
+---
+
+## 🐛 Solución de Problemas
+
+### Error: "Cannot connect to database"
+
+**Causa**: MySQL no está corriendo o credenciales incorrectas.
+
+**Solución**:
+1. Verifique que MySQL está corriendo:
+   ```bash
+   sudo systemctl status mysql    # Linux
+   brew services list             # macOS
+   ```
+2. Verifique las credenciales en `.env`
+3. Verifique que la base de datos existe:
+   ```bash
+   mysql -u root -p -e "SHOW DATABASES;"
+   ```
+
+### Error: "Port 3000 already in use"
+
+**Solución**: Cambie el puerto en `.env`:
+```env
+PORT=3001
+```
+
+### Error: "JWT Secret is not defined"
+
+**Solución**: Asegúrese de que `.env` tiene configurado:
+```env
+JWT_SECRET=tu_secreto_aqui
+```
+
+### Error de CORS
+
+**Causa**: El frontend no está en la lista de orígenes permitidos.
+
+**Solución**: Agregue la URL del frontend en `src/main.ts`:
+```typescript
+app.enableCors({
+  origin: ['http://localhost:3000', 'http://tu-frontend-url.com'],
+  credentials: true,
+});
+```
+
+---
+
+## 📞 Soporte
+
+Para problemas técnicos o consultas:
+- **Email**: soporte@ofraud.com
+- **Documentación**: Ver Swagger en `/docs`
+
+---
+
+## 📝 Notas Adicionales
+
+### Producción
+
+Para deploy en producción:
+
+1. Configure `NODE_ENV=production` en `.env`
+2. Use un secreto JWT fuerte y único
+3. Configure HTTPS
+4. Use un proceso manager como PM2:
+   ```bash
+   npm install -g pm2
+   pm2 start dist/main.js --name ofraud-api
+   ```
+5. Configure un proxy reverso (Nginx/Apache)
+
+### Seguridad
+
+- ✅ Las contraseñas se hashean con salt antes de almacenarse
+- ✅ Los tokens JWT expiran automáticamente
+- ✅ Las rutas de admin están protegidas
+- ✅ Validación de datos en todos los endpoints
+
+---
+
+**Versión**: 1.0.0  
+**Autores**: Santiago Niño, Gabriel Gutiérrez, Omar Llano, Alejandro Vargas  
+**Última actualización**: 2025
