@@ -22,20 +22,3 @@ export async function hashPassword(password: string): Promise<string> {
 export async function comparePassword(password: string, hash: string): Promise<boolean> {
   return await bcrypt.compare(password, hash);
 }
-
-// Mantener funciones antiguas por compatibilidad (marcar como deprecated)
-/**
- * @deprecated Usar hashPassword() en su lugar
- */
-export function generateSalt(length: number = 16): string {
-  const crypto = require('crypto');
-  return crypto.randomBytes(length).toString('hex');
-}
-
-/**
- * @deprecated Usar hashPassword() y comparePassword() en su lugar
- */
-export function sha256WithSalt(password: string, salt: string): string {
-  const { createHash } = require('crypto');
-  return createHash('sha256').update(password + salt).digest('hex');
-}
