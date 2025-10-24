@@ -1,7 +1,7 @@
 /* eslint-disable prettier/prettier */
 import { ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { UsersRepository } from './users.repository';
-import { hashPassword, comparePassword, generateSalt, sha256WithSalt } from '../util/hash/hash.util';
+import { hashPassword, comparePassword, generateSalt, sha256WithSalt, extractSaltFromBcrypt } from '../util/hash/hash.util';
 
 @Injectable()
 export class UsersService {
@@ -11,10 +11,12 @@ export class UsersService {
         try {
             console.log("Cifrando contraseña con bcrypt...");
             const hashed_password = await hashPassword(password);
+            
+            // Extraer el salt del hash bcrypt para guardarlo
+            const extractedSalt = extractSaltFromBcrypt(hashed_password);
             console.log("Contraseña hasheada exitosamente");
             
-            // Usar string vacío en lugar de null si la DB no permite NULL
-            return this.usersRepository.createUser(email, name, apellido, hashed_password, '', is_admin ?? false, is_active ?? true);
+            return this.usersRepository.createUser(email, name, apellido, hashed_password, extractedSalt, is_admin ?? false, is_active ?? true);
         }
         catch (error) {
             if (error.code === 'ER_DUP_ENTRY') {
@@ -33,9 +35,9 @@ export class UsersService {
         const user = await this.usersRepository.findByEmail(email);
         if(!user) return null;
 
-        // Migración: Si el usuario tiene salt (no vacío), está usando el sistema viejo
         let isValid = false;
-        if (user.salt && user.salt.length > 0) {
+        // Verificar si usa sistema viejo (salt que NO empiece con $2b$)
+        if (user.salt && !user.salt.startsWith('$2b$')) {
             // Sistema viejo (SHA-256)
             console.log(`Usuario ${email} usando sistema de hash antiguo, verificando...`);
             isValid = user.contrasena === sha256WithSalt(password, user.salt);
@@ -44,9 +46,10 @@ export class UsersService {
                 // Migrar a bcrypt automáticamente
                 console.log(`Migrando usuario ${email} a bcrypt...`);
                 const newHash = await hashPassword(password);
+                const extractedSalt = extractSaltFromBcrypt(newHash);
                 await this.usersRepository.updateUser(user.id, { 
                     password_hash: newHash, 
-                    salt: '' // String vacío en lugar de null
+                    salt: extractedSalt
                 });
                 console.log(`Usuario ${email} migrado exitosamente`);
             }
@@ -58,14 +61,17 @@ export class UsersService {
         return isValid ? user : null;
     }
 
+
     async updateUser(id:number, data: { email?: string; name?: string; apellido?: string; password?: string; is_admin?: boolean; is_active?: boolean }) {
         if (!data) {
             throw new Error('Update data is required');
         }
         
         let hashedPassword: string | undefined;
+        let extractedSalt: string | undefined;
         if(data.password){
             hashedPassword = await hashPassword(data.password);
+            extractedSalt = extractSaltFromBcrypt(hashedPassword);
         }
         
         return this.usersRepository.updateUser(id, {
@@ -73,11 +79,12 @@ export class UsersService {
             name: data.name,
             apellido: data.apellido,
             password_hash: hashedPassword,
-            salt: hashedPassword ? '' : undefined, // String vacío en lugar de null
+            salt: extractedSalt,
             is_admin: data.is_admin,
             is_active: data.is_active
         });
     }
+
 
     async getAllUsers() {
         return this.usersRepository.findAllUsers();
@@ -94,15 +101,16 @@ export class UsersService {
     async changePassword(id: number, newPassword: string) {
         const user = await this.usersRepository.findById(id);
         if (!user) {
-          throw new NotFoundException('Usuario no encontrado');
+        throw new NotFoundException('Usuario no encontrado');
         }
-      
+    
         const newHashedPassword = await hashPassword(newPassword);
+        const extractedSalt = extractSaltFromBcrypt(newHashedPassword);
         await this.usersRepository.updateUser(id, { 
             password_hash: newHashedPassword, 
-            salt: '' // String vacío en lugar de null
+            salt: extractedSalt
         });
-      
+    
         return { success: true };
     }
       

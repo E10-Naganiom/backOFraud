@@ -1,28 +1,28 @@
 /* eslint-disable prettier/prettier */
 import * as bcrypt from 'bcrypt';
 
-// Número de rondas de hashing (10-12 es recomendado, mayor = más seguro pero más lento)
 const SALT_ROUNDS = 12;
 
-/**
- * Hashea una contraseña usando bcrypt
- * @param password Contraseña en texto plano
- * @returns Hash de la contraseña (incluye la salt automáticamente)
- */
 export async function hashPassword(password: string): Promise<string> {
   return await bcrypt.hash(password, SALT_ROUNDS);
 }
 
-/**
- * Compara una contraseña en texto plano con un hash
- * @param password Contraseña en texto plano
- * @param hash Hash almacenado en la base de datos
- * @returns true si coinciden, false si no
- */
 export async function comparePassword(password: string, hash: string): Promise<boolean> {
   return await bcrypt.compare(password, hash);
 }
 
+/**
+ * Extrae el salt de un hash bcrypt para guardarlo en DB
+ * Formato bcrypt: $2b$12$saltsaltsaltsalt...
+ */
+export function extractSaltFromBcrypt(hash: string): string {
+  // bcrypt hash format: $2b$rounds$salt(22 chars)hash(31 chars)
+  // Extraer las primeras 29 caracteres: $2b$12$saltsaltsaltsalt
+  if (hash && hash.length >= 29) {
+    return hash.substring(0, 29);
+  }
+  return 'bcrypt'; // Fallback
+}
 // Mantener funciones antiguas por compatibilidad (marcar como deprecated)
 /**
  * @deprecated Usar hashPassword() en su lugar
