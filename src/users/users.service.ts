@@ -1,7 +1,7 @@
 /* eslint-disable prettier/prettier */
 import { ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { UsersRepository } from './users.repository';
-import { hashPassword, comparePassword, generateSalt, sha256WithSalt } from '../util/hash/hash.util';
+import { hashPassword, comparePassword, sha256WithSalt} from '../util/hash/hash.util';
 
 @Injectable()
 export class UsersService {
