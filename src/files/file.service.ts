@@ -35,22 +35,31 @@ export class FilesService {
   }
 
   validateFile(file: Express.Multer.File): void {
+    // Validar que file existe y es un objeto válido
+    if (!file || typeof file !== 'object') {
+      throw new BadRequestException('Archivo inválido o no proporcionado');
+    }
+
     // Validar tamaño
-    if (file.size > this.maxFileSize) {
+    if (!file.size || typeof file.size !== 'number' || file.size > this.maxFileSize) {
       throw new BadRequestException(
-        `El archivo ${file.originalname} excede el tamaño máximo permitido de 10MB`
+        `El archivo ${file.originalname || 'desconocido'} excede el tamaño máximo permitido de 10MB`
       );
     }
 
     // Validar tipo MIME
-    if (!this.allowedMimeTypes.includes(file.mimetype)) {
+    if (!file.mimetype || !this.allowedMimeTypes.includes(file.mimetype)) {
       throw new BadRequestException(
-        `Tipo de archivo no permitido: ${file.mimetype}. ` +
+        `Tipo de archivo no permitido: ${file.mimetype || 'desconocido'}. ` +
         `Tipos permitidos: imágenes (JPEG, PNG, GIF, WebP) y PDF`
       );
     }
 
     // Validar extensión
+    if (!file.originalname || typeof file.originalname !== 'string') {
+      throw new BadRequestException('Nombre de archivo inválido');
+    }
+
     const fileExtension = file.originalname.toLowerCase().substring(file.originalname.lastIndexOf('.'));
     if (!this.allowedExtensions.includes(fileExtension)) {
       throw new BadRequestException(
@@ -60,16 +69,41 @@ export class FilesService {
   }
 
   validateMultipleFiles(files: Express.Multer.File[], maxFiles: number = 5): void {
+    // Validar que files sea un array
+    if (!Array.isArray(files)) {
+      throw new BadRequestException('Se esperaba un array de archivos');
+    }
+
+    // Validar que no esté vacío
+    if (files.length === 0) {
+      throw new BadRequestException('No se proporcionaron archivos');
+    }
+
+    // Validar cantidad máxima
     if (files.length > maxFiles) {
       throw new BadRequestException(
         `No se pueden subir más de ${maxFiles} archivos a la vez`
       );
     }
 
-    files.forEach(file => this.validateFile(file));
+    // Validar cada archivo individualmente
+    files.forEach((file, index) => {
+      try {
+        this.validateFile(file);
+      } catch (error) {
+        throw new BadRequestException(
+          `Error en archivo ${index + 1}: ${error.message}`
+        );
+      }
+    });
   }
 
   getFileInfo(file: Express.Multer.File): UploadedFileInfo {
+    // Validar que file existe
+    if (!file || !file.filename) {
+      throw new BadRequestException('Información de archivo inválida');
+    }
+
     const relativePath = `public/uploads/${file.filename}`;
     return {
       filename: file.filename,
@@ -79,12 +113,41 @@ export class FilesService {
   }
 
   getMultipleFilesInfo(files: Express.Multer.File[]): UploadedFileInfo[] {
-    return files.map(file => this.getFileInfo(file));
+    // Validar que files sea un array
+    if (!Array.isArray(files)) {
+      throw new BadRequestException('Se esperaba un array de archivos');
+    }
+
+    return files.map((file, index) => {
+      try {
+        return this.getFileInfo(file);
+      } catch (error) {
+        throw new BadRequestException(
+          `Error procesando archivo ${index + 1}: ${error.message}`
+        );
+      }
+    });
   }
 
   deleteFile(relativePath: string): void {
+    // Validar que relativePath es un string válido
+    if (!relativePath || typeof relativePath !== 'string') {
+      throw new BadRequestException('Ruta de archivo inválida');
+    }
+
+    // Prevenir path traversal attacks
+    if (relativePath.includes('..') || relativePath.includes('~')) {
+      throw new BadRequestException('Ruta de archivo no permitida');
+    }
+
     try {
       const fullPath = join(__dirname, '../../', relativePath);
+      
+      // Asegurar que la ruta está dentro del directorio permitido
+      if (!fullPath.startsWith(this.uploadPath)) {
+        throw new BadRequestException('Acceso a archivo no permitido');
+      }
+
       if (fs.existsSync(fullPath)) {
         fs.unlinkSync(fullPath);
       }

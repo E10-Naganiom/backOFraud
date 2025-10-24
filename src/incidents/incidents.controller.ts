@@ -10,7 +10,8 @@ import {
   Patch,
   UploadedFiles,
   UseInterceptors,
-  ForbiddenException
+  ForbiddenException,
+  BadRequestException
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { IncidentsService } from './incidents.service';
@@ -28,7 +29,7 @@ import { UpdateIncidentDto } from './dto/update-incident.dto';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import * as tokenService from 'src/auth/token.service';
 import { diskStorage } from 'multer';
-import { join } from 'path';
+import { join, extname } from 'path';
 
 @ApiTags('Modulo de Incidentes')
 @ApiBearerAuth()
@@ -71,34 +72,86 @@ export class IncidentsController {
     storage: diskStorage({
       destination: join(__dirname, '../../public/uploads'),
       filename: (req, file, cb) => {
+        // Sanitizar nombre de archivo
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        const name = file.originalname.replace(/\s/g, '_');
-        const filename = `${uniqueSuffix}-${name}`;
+        const ext = extname(file.originalname).toLowerCase();
+        const nameWithoutExt = file.originalname
+          .replace(ext, '')
+          .replace(/[^a-zA-Z0-9]/g, '_') // Remover caracteres especiales
+          .substring(0, 50); // Limitar longitud
+        const filename = `${uniqueSuffix}-${nameWithoutExt}${ext}`;
         cb(null, filename);
       }
-    })
+    }),
+    limits: {
+      fileSize: 10 * 1024 * 1024, // 10MB por archivo
+      files: 5 // Máximo 5 archivos
+    },
+    fileFilter: (req, file, cb) => {
+      // Validar tipo MIME
+      const allowedMimeTypes = [
+        'image/jpeg',
+        'image/jpg',
+        'image/png',
+        'image/gif',
+        'image/webp',
+        'application/pdf'
+      ];
+
+      if (!allowedMimeTypes.includes(file.mimetype)) {
+        return cb(
+          new BadRequestException(
+            `Tipo de archivo no permitido: ${file.mimetype}. ` +
+            `Solo se permiten: imágenes (JPEG, PNG, GIF, WebP) y PDF`
+          ),
+          false
+        );
+      }
+
+      // Validar extensión
+      const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.pdf'];
+      const ext = extname(file.originalname).toLowerCase();
+      
+      if (!allowedExtensions.includes(ext)) {
+        return cb(
+          new BadRequestException(
+            `Extensión no permitida: ${ext}. ` +
+            `Solo se permiten: ${allowedExtensions.join(', ')}`
+          ),
+          false
+        );
+      }
+
+      cb(null, true);
+    }
   }))
   async createIncident(
     @CurrentUser() user: tokenService.UserProfile,
     @Body() createIncidentDto: CreateIncidentDto,
     @UploadedFiles() files?: Express.Multer.File[]
   ) {
-  const es_anonimo = createIncidentDto.es_anonimo === true || 
-                      createIncidentDto.es_anonimo === 'true' || 
-                      createIncidentDto.es_anonimo === '1' ||
-                      (createIncidentDto.es_anonimo as any) === 1;
+    // Validar que files sea un array si existe
+    if (files && !Array.isArray(files)) {
+      throw new BadRequestException('Se esperaba un array de archivos');
+    }
 
-  // Crear el DTO corregido
-  const correctedDto = {
-    ...createIncidentDto,
-    es_anonimo
-  };
+    // Transformar es_anonimo correctamente
+    const es_anonimo = createIncidentDto.es_anonimo === true || 
+                        createIncidentDto.es_anonimo === 'true' || 
+                        createIncidentDto.es_anonimo === '1' ||
+                        (createIncidentDto.es_anonimo as any) === 1;
 
-  return this.incidentsService.createIncident(
-    user.id,
-    correctedDto,
-    files
-  );
+    // Crear el DTO corregido
+    const correctedDto = {
+      ...createIncidentDto,
+      es_anonimo
+    };
+
+    return this.incidentsService.createIncident(
+      user.id,
+      correctedDto,
+      files
+    );
   }
 
   @ApiOperation({ summary: 'Obtener todos los incidentes con sus evidencias' })
@@ -228,12 +281,58 @@ export class IncidentsController {
     storage: diskStorage({
       destination: join(__dirname, '../../public/uploads'),
       filename: (req, file, cb) => {
+        // Sanitizar nombre de archivo
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        const name = file.originalname.replace(/\s/g, '_');
-        const filename = `${uniqueSuffix}-${name}`;
+        const ext = extname(file.originalname).toLowerCase();
+        const nameWithoutExt = file.originalname
+          .replace(ext, '')
+          .replace(/[^a-zA-Z0-9]/g, '_') // Remover caracteres especiales
+          .substring(0, 50); // Limitar longitud
+        const filename = `${uniqueSuffix}-${nameWithoutExt}${ext}`;
         cb(null, filename);
       }
-    })
+    }),
+    limits: {
+      fileSize: 10 * 1024 * 1024, // 10MB por archivo
+      files: 5 // Máximo 5 archivos
+    },
+    fileFilter: (req, file, cb) => {
+      // Validar tipo MIME
+      const allowedMimeTypes = [
+        'image/jpeg',
+        'image/jpg',
+        'image/png',
+        'image/gif',
+        'image/webp',
+        'application/pdf'
+      ];
+
+      if (!allowedMimeTypes.includes(file.mimetype)) {
+        return cb(
+          new BadRequestException(
+            `Tipo de archivo no permitido: ${file.mimetype}. ` +
+            `Solo se permiten: imágenes (JPEG, PNG, GIF, WebP) y PDF`
+          ),
+          false
+        );
+      }
+
+      // Validar extensión
+      const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.pdf'];
+      const ext = extname(file.originalname).toLowerCase();
+      
+      if (!allowedExtensions.includes(ext)) {
+        return cb(
+          new BadRequestException(
+            `Extensión no permitida: ${ext}. ` +
+            `Solo se permiten: ${allowedExtensions.join(', ')}`
+          ),
+          false
+        );
+      }
+
+      cb(null, true);
+    }
   }))
   async updateIncident(
     @CurrentUser() user: tokenService.UserProfile,
@@ -241,6 +340,11 @@ export class IncidentsController {
     @Body() updateIncidentDto: UpdateIncidentDto,
     @UploadedFiles() files?: Express.Multer.File[]
   ) {
+    // Validar que files sea un array si existe
+    if (files && !Array.isArray(files)) {
+      throw new BadRequestException('Se esperaba un array de archivos');
+    }
+
     const { evidencias_a_eliminar, ...data } = updateIncidentDto;
     
     let idsToDelete: number[] | undefined;
@@ -277,7 +381,7 @@ export class IncidentsController {
   @ApiResponse({ status: 401, description: 'No autenticado.' })
   @Get('user/:id/summary')
   async getUserIncidentSummary(
-    @CurrentUser() user: tokenService.UserProfile, // ← Usuario autenticado
+    @CurrentUser() user: tokenService.UserProfile,
     @Param('id') id: number
   ) {
     const targetUserId = Number(id);
